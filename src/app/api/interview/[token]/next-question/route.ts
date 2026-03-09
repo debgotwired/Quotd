@@ -1,0 +1,63 @@
+import { NextRequest, NextResponse } from "next/server";
+import { createServiceClient } from "@/lib/supabase/server";
+import { generateFirstQuestion, generateNextQuestion } from "@/lib/ai/question";
+import type { ExtractionState, Message } from "@/lib/supabase/types";
+
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ token: string }> }
+) {
+  const { token } = await params;
+  const supabase = await createServiceClient();
+
+  const { data: interview, error: interviewError } = await supabase
+    .from("interviews")
+    .select("*")
+    .eq("share_token", token)
+    .single();
+
+  if (interviewError || !interview) {
+    return NextResponse.json({ error: "Interview not found" }, { status: 404 });
+  }
+
+  const { data: messages } = await supabase
+    .from("messages")
+    .select("*")
+    .eq("interview_id", interview.id)
+    .order("created_at", { ascending: true });
+
+  const extractionState = interview.extraction_state as ExtractionState;
+  let questionResponse;
+
+  if (!messages || messages.length === 0) {
+    questionResponse = await generateFirstQuestion(
+      interview.product_name,
+      interview.customer_company
+    );
+
+    await supabase
+      .from("interviews")
+      .update({ status: "in_progress" })
+      .eq("id", interview.id);
+  } else {
+    questionResponse = await generateNextQuestion(
+      interview.product_name,
+      interview.customer_company,
+      messages as Message[],
+      extractionState
+    );
+  }
+
+  await supabase.from("messages").insert({
+    interview_id: interview.id,
+    role: "assistant",
+    content: questionResponse.question,
+  });
+
+  return NextResponse.json({
+    question: questionResponse.question,
+    type: questionResponse.type,
+    should_end: questionResponse.should_end,
+    question_count: extractionState.question_count + 1,
+  });
+}
