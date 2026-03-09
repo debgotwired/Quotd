@@ -6,21 +6,55 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:watch": "vitest --watch",
+    "test:coverage": "vitest run --coverage",
+    "test:ui": "vitest --ui",
+    "test:ai": "vitest run src/test/ai",
+    "test:security": "vitest run src/test/security",
+    "test:contracts": "vitest run src/test/contracts",
+    "test:resilience": "vitest run src/test/resilience",
+    "test:components": "vitest run src/test/components",
+    "test:integration": "vitest run src/test/integration"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^3.0.58",
+    "@ai-sdk/deepgram": "^2.0.24",
+    "@deepgram/sdk": "^5.0.0",
+    "@supabase/ssr": "^0.9.0",
+    "@supabase/supabase-js": "^2.98.0",
+    "ai": "^6.0.116",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.577.0",
     "next": "16.1.6",
+    "radix-ui": "^1.4.3",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "tailwind-merge": "^3.5.0",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/uuid": "^10.0.0",
+    "@vitejs/plugin-react": "^5.1.4",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
+    "jsdom": "^28.1.0",
+    "msw": "^2.12.10",
+    "shadcn": "^3.8.5",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "tw-animate-css": "^1.4.0",
+    "typescript": "^5",
+    "vitest": "^4.0.18",
+    "zod": "^4.3.6"
   }
 }
