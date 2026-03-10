@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ChatMessage } from "@/components/chat/chat-message";
-import { VoiceFirstInput, type AttachedFile } from "@/components/chat/voice-first-input";
+import { VoiceFirstInput, type AttachedFile, type AudioData } from "@/components/chat/voice-first-input";
 
 type Message = {
   id: string;
@@ -34,6 +34,7 @@ export default function InterviewChatPage() {
   const [submitting, setSubmitting] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showResumeNotice, setShowResumeNotice] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const questionCount = messages.filter((m) => m.role === "assistant").length;
 
@@ -97,6 +98,14 @@ export default function InterviewChatPage() {
       setLoading(true);
       const data = await fetchInterview();
       if (data && data.interview.status !== "completed") {
+        // Check if user is resuming (has existing messages)
+        const isResuming = data.messages && data.messages.length > 0;
+        if (isResuming) {
+          setShowResumeNotice(true);
+          // Auto-hide the notice after 4 seconds
+          setTimeout(() => setShowResumeNotice(false), 4000);
+        }
+
         // Check if there's already a question asked
         const lastMessage = data.messages?.[data.messages.length - 1];
         if (!lastMessage || lastMessage.role !== "assistant") {
@@ -108,7 +117,7 @@ export default function InterviewChatPage() {
     init();
   }, [fetchInterview, fetchNextQuestion]);
 
-  const handleSendMessage = async (content: string, files?: AttachedFile[]) => {
+  const handleSendMessage = async (content: string, files?: AttachedFile[], audio?: AudioData) => {
     if ((!content.trim() && (!files || files.length === 0)) || submitting) return;
 
     // Optimistically add user message
@@ -134,7 +143,12 @@ export default function InterviewChatPage() {
       const res = await fetch(`/api/interview/${token}/submit-answer`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ answer: answerText, files }),
+        body: JSON.stringify({
+          answer: answerText,
+          files,
+          audioUrl: audio?.audioUrl,
+          audioPath: audio?.audioPath,
+        }),
       });
 
       if (!res.ok) {
@@ -231,6 +245,31 @@ export default function InterviewChatPage() {
       {/* Messages */}
       <main className="flex-1 overflow-y-auto">
         <div className="max-w-3xl mx-auto px-4 py-6 space-y-4">
+          {/* Resume notice */}
+          {showResumeNotice && (
+            <div className="bg-gray-100 rounded-lg px-4 py-3 flex items-center justify-between animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-gray-900 rounded-full flex items-center justify-center">
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900">Welcome back!</p>
+                  <p className="text-xs text-gray-500">Continuing from where you left off</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowResumeNotice(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          )}
+
           {/* Welcome message if no messages yet */}
           {messages.length === 0 && !isTyping && (
             <div className="text-center py-12">

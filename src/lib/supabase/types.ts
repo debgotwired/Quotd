@@ -44,5 +44,7 @@ export type Message = {
   interview_id: string;
   role: "assistant" | "user";
   content: string;
+  audio_url?: string | null;
+  audio_path?: string | null;
   created_at: string;
 };

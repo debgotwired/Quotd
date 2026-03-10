@@ -12,8 +12,13 @@ export type AttachedFile = {
   path: string;
 };
 
+export type AudioData = {
+  audioUrl: string | null;
+  audioPath: string | null;
+};
+
 interface VoiceFirstInputProps {
-  onSend: (message: string, files?: AttachedFile[]) => void;
+  onSend: (message: string, files?: AttachedFile[], audio?: AudioData) => void;
   disabled?: boolean;
 }
 
@@ -172,7 +177,11 @@ export function VoiceFirstInput({ onSend, disabled }: VoiceFirstInputProps) {
         ? "audio/mp4"
         : "audio/wav";
 
-      const mediaRecorder = new MediaRecorder(stream, { mimeType });
+      // Use 24kbps for speech - optimal for voice without quality loss
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType,
+        audioBitsPerSecond: 24000,
+      });
 
       mediaRecorder.ondataavailable = (event) => {
         if (event.data && event.data.size > 0) {
@@ -226,6 +235,7 @@ export function VoiceFirstInput({ onSend, disabled }: VoiceFirstInputProps) {
     try {
       const formData = new FormData();
       formData.append("audio", audioBlob, "recording.webm");
+      formData.append("token", token);
 
       const response = await fetch("/api/transcribe", {
         method: "POST",
@@ -240,7 +250,11 @@ export function VoiceFirstInput({ onSend, disabled }: VoiceFirstInputProps) {
       const data = await response.json();
 
       if (data.transcript && data.transcript.trim()) {
-        onSend(data.transcript.trim(), hasFiles ? attachedFiles : undefined);
+        const audioData: AudioData | undefined =
+          data.audioUrl || data.audioPath
+            ? { audioUrl: data.audioUrl, audioPath: data.audioPath }
+            : undefined;
+        onSend(data.transcript.trim(), hasFiles ? attachedFiles : undefined, audioData);
         setAttachedFiles([]);
       } else {
         setError("No speech detected");
@@ -251,11 +265,11 @@ export function VoiceFirstInput({ onSend, disabled }: VoiceFirstInputProps) {
     } finally {
       setIsProcessing(false);
     }
-  }, [onSend, hasFiles, attachedFiles]);
+  }, [onSend, hasFiles, attachedFiles, token]);
 
   const handleTextSend = useCallback(() => {
     if ((!hasText && !hasFiles) || disabled) return;
-    onSend(textMessage.trim(), hasFiles ? attachedFiles : undefined);
+    onSend(textMessage.trim(), hasFiles ? attachedFiles : undefined, undefined);
     setTextMessage("");
     setAttachedFiles([]);
   }, [textMessage, hasText, hasFiles, onSend, disabled, attachedFiles]);

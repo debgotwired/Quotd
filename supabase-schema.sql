@@ -21,8 +21,15 @@ CREATE TABLE messages (
   interview_id UUID REFERENCES interviews(id) ON DELETE CASCADE,
   role TEXT NOT NULL CHECK (role IN ('assistant', 'user')),
   content TEXT NOT NULL,
+  audio_url TEXT,
+  audio_path TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Migration: Add audio columns to existing messages table
+-- Run this if the table already exists:
+-- ALTER TABLE messages ADD COLUMN IF NOT EXISTS audio_url TEXT;
+-- ALTER TABLE messages ADD COLUMN IF NOT EXISTS audio_path TEXT;
 
 -- Indexes
 CREATE INDEX idx_interviews_user_id ON interviews(user_id);

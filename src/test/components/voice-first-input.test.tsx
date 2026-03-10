@@ -93,7 +93,7 @@ describe("VoiceFirstInput", () => {
       const textarea = await screen.findByPlaceholderText(/type a message/i);
       await userEvent.type(textarea, "Test message{enter}");
 
-      expect(mockOnSend).toHaveBeenCalledWith("Test message", undefined);
+      expect(mockOnSend).toHaveBeenCalledWith("Test message", undefined, undefined);
     });
 
     it("does not send empty message", async () => {

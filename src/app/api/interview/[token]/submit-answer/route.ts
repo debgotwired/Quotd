@@ -10,7 +10,7 @@ export async function POST(
   { params }: { params: Promise<{ token: string }> }
 ) {
   const { token } = await params;
-  const { answer } = await request.json();
+  const { answer, audioUrl, audioPath } = await request.json();
 
   if (!answer || typeof answer !== "string") {
     return NextResponse.json({ error: "Answer is required" }, { status: 400 });
@@ -44,6 +44,8 @@ export async function POST(
     interview_id: interview.id,
     role: "user",
     content: answer,
+    audio_url: audioUrl || null,
+    audio_path: audioPath || null,
   });
 
   const currentState = interview.extraction_state as ExtractionState;
