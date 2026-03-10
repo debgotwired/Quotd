@@ -23,6 +23,8 @@
     "@ai-sdk/anthropic": "^3.0.58",
     "@ai-sdk/deepgram": "^2.0.24",
     "@deepgram/sdk": "^5.0.0",
+    "@react-email/components": "^1.0.8",
+    "@react-email/render": "^2.0.4",
     "@supabase/ssr": "^0.9.0",
     "@supabase/supabase-js": "^2.98.0",
     "ai": "^6.0.116",
@@ -33,6 +35,7 @@
     "radix-ui": "^1.4.3",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "resend": "^6.9.3",
     "tailwind-merge": "^3.5.0",
     "uuid": "^13.0.0"
   },

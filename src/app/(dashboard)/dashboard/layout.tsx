@@ -15,6 +15,18 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
+  // Fetch user profile
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("full_name, company_name")
+    .eq("user_id", user.id)
+    .single();
+
+  // If no profile, redirect to onboarding (middleware should catch this, but just in case)
+  if (!profile) {
+    redirect("/onboarding");
+  }
+
   return (
     <div className="min-h-screen bg-white">
       <nav className="border-b border-gray-200">
@@ -23,7 +35,7 @@ export default async function DashboardLayout({
             Quotd
           </Link>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-400">{user.email}</span>
+            <span className="text-sm text-gray-400">{profile.full_name}</span>
             <LogoutButton />
           </div>
         </div>

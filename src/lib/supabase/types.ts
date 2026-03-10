@@ -48,3 +48,21 @@ export type Message = {
   audio_path?: string | null;
   created_at: string;
 };
+
+export type Profile = {
+  id: string;
+  user_id: string;
+  company_name: string;
+  full_name: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type OtpToken = {
+  id: string;
+  email: string;
+  code: string;
+  expires_at: string;
+  verified: boolean;
+  created_at: string;
+};

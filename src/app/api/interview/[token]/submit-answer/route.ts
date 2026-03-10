@@ -3,6 +3,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { extractFromAnswer } from "@/lib/ai/extract";
 import { generateNextQuestion } from "@/lib/ai/question";
 import { generateDraft } from "@/lib/ai/draft";
+import { sendInterviewCompletedEmail } from "@/lib/email/send";
 import type { ExtractionState, Message } from "@/lib/supabase/types";
 
 export async function POST(
@@ -91,6 +92,23 @@ export async function POST(
         draft_content: draft,
       })
       .eq("id", interview.id);
+
+    // Send completion notification to interview owner
+    if (interview.user_id) {
+      const { data: userData } = await supabase.auth.admin.getUserById(
+        interview.user_id
+      );
+      if (userData?.user?.email) {
+        sendInterviewCompletedEmail(
+          userData.user.email,
+          interview.customer_company,
+          interview.product_name,
+          interview.id
+        ).catch((err) => {
+          console.error("Failed to send completion email:", err);
+        });
+      }
+    }
 
     return NextResponse.json({
       question: questionResponse.question,

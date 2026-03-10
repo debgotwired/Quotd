@@ -5,6 +5,12 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
+function generateShareToken(): string {
+  const array = new Uint8Array(16);
+  crypto.getRandomValues(array);
+  return Array.from(array, (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 export default function NewInterviewPage() {
   const [customerCompany, setCustomerCompany] = useState("");
   const [productName, setProductName] = useState("");
@@ -33,6 +39,7 @@ export default function NewInterviewPage() {
         customer_company: customerCompany,
         product_name: productName,
         status: "draft",
+        share_token: generateShareToken(),
         extraction_state: {
           metrics: [],
           quotes: [],

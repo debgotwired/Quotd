@@ -29,21 +29,66 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  const pathname = request.nextUrl.pathname;
+
   // Protect dashboard routes
-  if (request.nextUrl.pathname.startsWith("/dashboard") && !user) {
+  if (pathname.startsWith("/dashboard") && !user) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
-  // Redirect logged in users away from auth pages
-  if (
-    (request.nextUrl.pathname === "/login" ||
-      request.nextUrl.pathname === "/signup") &&
-    user
-  ) {
+  // Handle onboarding page
+  if (pathname === "/onboarding") {
+    if (!user) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      return NextResponse.redirect(url);
+    }
+
+    // Check if user already has profile
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("user_id", user.id)
+      .single();
+
+    if (profile) {
+      // Already onboarded, go to dashboard
+      const url = request.nextUrl.clone();
+      url.pathname = "/dashboard";
+      return NextResponse.redirect(url);
+    }
+
+    return supabaseResponse;
+  }
+
+  // For dashboard, check if user needs onboarding
+  if (pathname.startsWith("/dashboard") && user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("user_id", user.id)
+      .single();
+
+    if (!profile) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/onboarding";
+      return NextResponse.redirect(url);
+    }
+  }
+
+  // Redirect logged in users away from auth pages (except onboarding)
+  if (pathname === "/login" && user) {
+    // Check if user needs onboarding
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("user_id", user.id)
+      .single();
+
     const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
+    url.pathname = profile ? "/dashboard" : "/onboarding";
     return NextResponse.redirect(url);
   }
 
