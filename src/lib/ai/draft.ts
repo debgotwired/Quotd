@@ -22,6 +22,7 @@ export async function generateDraft(
   const { text } = await generateText({
     model: anthropic("claude-sonnet-4-20250514"),
     prompt,
+    abortSignal: AbortSignal.timeout(45000),
   });
 
   return text;

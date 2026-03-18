@@ -49,9 +49,10 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createServiceClient();
 
-    // Generate unique filename
+    // Generate unique filename with sanitized extension
     const timestamp = Date.now();
-    const ext = file.name.split(".").pop() || "bin";
+    const rawExt = file.name.split(".").pop() || "bin";
+    const ext = rawExt.replace(/[^a-zA-Z0-9]/g, "").slice(0, 10) || "bin";
     const fileName = `${interviewToken}/${timestamp}-${Math.random().toString(36).slice(2)}.${ext}`;
 
     // Upload to Supabase Storage
@@ -73,10 +74,13 @@ export async function POST(request: NextRequest) {
       .from("interview-files")
       .getPublicUrl(data.path);
 
+    // Sanitize display name
+    const safeName = file.name.replace(/[^\w.\-() ]/g, "_").slice(0, 255);
+
     return NextResponse.json({
       success: true,
       file: {
-        name: file.name,
+        name: safeName,
         type: file.type,
         size: file.size,
         url: urlData.publicUrl,

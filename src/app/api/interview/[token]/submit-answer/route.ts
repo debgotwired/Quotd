@@ -29,6 +29,10 @@ export async function POST(
     return NextResponse.json({ error: "Interview not found" }, { status: 404 });
   }
 
+  if (interview.status === "completed") {
+    return NextResponse.json({ error: "Interview already completed" }, { status: 400 });
+  }
+
   const { data: messages } = await supabase
     .from("messages")
     .select("*")
@@ -50,7 +54,14 @@ export async function POST(
   });
 
   const currentState = interview.extraction_state as ExtractionState;
-  const newState = await extractFromAnswer(currentState, lastQuestion.content, answer);
+
+  let newState: ExtractionState;
+  try {
+    newState = await extractFromAnswer(currentState, lastQuestion.content, answer);
+  } catch (err) {
+    console.error("AI extraction failed:", err);
+    return NextResponse.json({ error: "Failed to process answer" }, { status: 502 });
+  }
 
   await supabase
     .from("interviews")
@@ -63,12 +74,18 @@ export async function POST(
     .eq("interview_id", interview.id)
     .order("created_at", { ascending: true });
 
-  const questionResponse = await generateNextQuestion(
-    interview.product_name,
-    interview.customer_company,
-    (updatedMessages || []) as Message[],
-    newState
-  );
+  let questionResponse;
+  try {
+    questionResponse = await generateNextQuestion(
+      interview.product_name,
+      interview.customer_company,
+      (updatedMessages || []) as Message[],
+      newState
+    );
+  } catch (err) {
+    console.error("AI question generation failed:", err);
+    return NextResponse.json({ error: "Failed to generate question" }, { status: 502 });
+  }
 
   if (questionResponse.should_end) {
     await supabase.from("messages").insert({
@@ -77,12 +94,18 @@ export async function POST(
       content: questionResponse.question,
     });
 
-    const draft = await generateDraft(
-      interview.customer_company,
-      interview.product_name,
-      newState,
-      (updatedMessages || []) as Message[]
-    );
+    let draft: string;
+    try {
+      draft = await generateDraft(
+        interview.customer_company,
+        interview.product_name,
+        newState,
+        (updatedMessages || []) as Message[]
+      );
+    } catch (err) {
+      console.error("AI draft generation failed:", err);
+      draft = "";
+    }
 
     await supabase
       .from("interviews")

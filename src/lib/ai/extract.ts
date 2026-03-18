@@ -38,6 +38,7 @@ export async function extractFromAnswer(
     model: anthropic("claude-sonnet-4-20250514"),
     schema: ExtractionResultSchema,
     prompt,
+    abortSignal: AbortSignal.timeout(30000),
   });
 
   const mergedMetrics = mergeMetrics(currentState.metrics, object.metrics);

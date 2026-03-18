@@ -123,17 +123,17 @@ describe("Question Generation", () => {
   });
 
   describe("Interview Ending Logic", () => {
-    it("ends interview after 12 questions", async () => {
-      const stateAt12: ExtractionState = {
+    it("ends interview after 15 questions", async () => {
+      const stateAt15: ExtractionState = {
         metrics: [{ name: "Test", delta: "10%", confidence: "high" }],
         quotes: [{ text: "Great product", tag: "praise" }],
         facts: { challenge: "X", solution: "Y" },
-        question_count: 12,
+        question_count: 15,
       };
 
       const messages: Message[] = [];
 
-      const result = await generateNextQuestion("ProductX", "Acme", messages, stateAt12);
+      const result = await generateNextQuestion("ProductX", "Acme", messages, stateAt15);
 
       expect(result.should_end).toBe(true);
       expect(result.type).toBe("wrap_up");
@@ -155,7 +155,7 @@ describe("Question Generation", () => {
           solution: "Solution text",
           impact: "Impact text",
         },
-        question_count: 10,
+        question_count: 13,
       };
 
       const messages: Message[] = [];
@@ -166,12 +166,12 @@ describe("Question Generation", () => {
       expect(result.should_end).toBe(true);
     });
 
-    it("continues if data is insufficient even at question 10", async () => {
+    it("continues if data is insufficient even at question 13", async () => {
       const insufficientState: ExtractionState = {
         metrics: [], // No metrics!
         quotes: [],
         facts: {},
-        question_count: 10,
+        question_count: 13,
       };
 
       const messages: Message[] = [];

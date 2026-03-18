@@ -152,6 +152,11 @@ export function VoiceFirstInput({ onSend, disabled }: VoiceFirstInputProps) {
     setError(null);
     chunksRef.current = [];
 
+    if (!navigator.mediaDevices || typeof MediaRecorder === "undefined") {
+      setError("Voice recording is not supported in this browser");
+      return;
+    }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -226,8 +231,8 @@ export function VoiceFirstInput({ onSend, disabled }: VoiceFirstInputProps) {
       stream.getTracks().forEach((track) => track.stop());
     }
 
-    if (audioBlob.size === 0) {
-      setError("No audio recorded");
+    if (audioBlob.size === 0 || recordingDuration < 1) {
+      setError(recordingDuration < 1 ? "Recording too short" : "No audio recorded");
       setIsProcessing(false);
       return;
     }

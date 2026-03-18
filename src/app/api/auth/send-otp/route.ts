@@ -65,6 +65,14 @@ export async function POST(request: NextRequest) {
     // Delete any existing OTP tokens for this email
     await supabase.from("otp_tokens").delete().eq("email", normalizedEmail);
 
+    // Opportunistic cleanup of expired tokens (~1% of requests)
+    if (Math.random() < 0.01) {
+      void supabase
+        .from("otp_tokens")
+        .delete()
+        .lt("expires_at", new Date().toISOString());
+    }
+
     // Generate new OTP using cryptographically secure method
     const code = generateOtp();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes

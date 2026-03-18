@@ -164,9 +164,9 @@ export default function LoginPage() {
         {step === "email" ? (
           <>
             <div className="mb-8">
-              <h1 className="text-2xl font-semibold text-gray-900">Sign in</h1>
+              <h1 className="text-2xl font-semibold text-gray-900">Welcome</h1>
               <p className="text-gray-500 text-sm mt-1">
-                Enter your email to receive a login code
+                Enter your email to sign in or create an account
               </p>
             </div>
 
@@ -255,7 +255,7 @@ export default function LoginPage() {
                 disabled={loading || code.some((d) => !d)}
                 className="w-full py-3 px-4 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                {loading ? "Verifying..." : "Sign in"}
+                {loading ? "Verifying..." : "Continue"}
               </button>
 
               <div className="flex justify-between text-sm">

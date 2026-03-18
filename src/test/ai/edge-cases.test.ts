@@ -456,7 +456,7 @@ describe("AI Edge Cases - State Management", () => {
         metrics: [{ name: "Test", delta: "10%", confidence: "high" }],
         quotes: [],
         facts: {},
-        question_count: 12,
+        question_count: 15,
       };
 
       const result = await generateNextQuestion(

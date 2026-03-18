@@ -24,6 +24,7 @@ export async function generateFirstQuestion(
     model: anthropic("claude-sonnet-4-20250514"),
     schema: QuestionResponseSchema,
     prompt,
+    abortSignal: AbortSignal.timeout(30000),
   });
 
   return object;
@@ -65,6 +66,7 @@ export async function generateNextQuestion(
     model: anthropic("claude-sonnet-4-20250514"),
     schema: QuestionResponseSchema,
     prompt,
+    abortSignal: AbortSignal.timeout(30000),
   });
 
   return object;

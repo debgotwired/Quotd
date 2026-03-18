@@ -20,6 +20,10 @@ export async function POST(
     return NextResponse.json({ error: "Interview not found" }, { status: 404 });
   }
 
+  if (interview.status === "completed") {
+    return NextResponse.json({ error: "Interview already completed" }, { status: 400 });
+  }
+
   const { data: messages } = await supabase
     .from("messages")
     .select("*")
@@ -29,23 +33,28 @@ export async function POST(
   const extractionState = interview.extraction_state as ExtractionState;
   let questionResponse;
 
-  if (!messages || messages.length === 0) {
-    questionResponse = await generateFirstQuestion(
-      interview.product_name,
-      interview.customer_company
-    );
+  try {
+    if (!messages || messages.length === 0) {
+      questionResponse = await generateFirstQuestion(
+        interview.product_name,
+        interview.customer_company
+      );
 
-    await supabase
-      .from("interviews")
-      .update({ status: "in_progress" })
-      .eq("id", interview.id);
-  } else {
-    questionResponse = await generateNextQuestion(
-      interview.product_name,
-      interview.customer_company,
-      messages as Message[],
-      extractionState
-    );
+      await supabase
+        .from("interviews")
+        .update({ status: "in_progress" })
+        .eq("id", interview.id);
+    } else {
+      questionResponse = await generateNextQuestion(
+        interview.product_name,
+        interview.customer_company,
+        messages as Message[],
+        extractionState
+      );
+    }
+  } catch (err) {
+    console.error("AI question generation failed:", err);
+    return NextResponse.json({ error: "Failed to generate question" }, { status: 502 });
   }
 
   await supabase.from("messages").insert({
