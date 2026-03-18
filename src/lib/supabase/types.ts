@@ -26,16 +26,39 @@ export type Facts = {
   impact?: string;
 };
 
+export type InterviewStatus =
+  | "draft"
+  | "in_progress"
+  | "review_pending"
+  | "review_in_progress"
+  | "review_complete";
+
+export type ReviewSection = {
+  id: string;
+  heading: string;
+  status: "pending" | "approved" | "flagged";
+  comment: string | null;
+};
+
+export type ReviewState = {
+  sections: ReviewSection[];
+  started_at: string | null;
+  completed_at: string | null;
+};
+
 export type Interview = {
   id: string;
   user_id: string;
   customer_company: string;
   product_name: string;
   category: string;
-  status: "draft" | "in_progress" | "completed";
+  status: InterviewStatus;
   share_token: string;
   extraction_state: ExtractionState;
   draft_content?: string;
+  review_state?: ReviewState | null;
+  customer_email?: string | null;
+  customer_draft_content?: string | null;
   created_at: string;
 };
 

@@ -20,7 +20,7 @@ export async function POST(
     return NextResponse.json({ error: "Interview not found" }, { status: 404 });
   }
 
-  if (interview.status === "completed") {
+  if (interview.status !== "draft" && interview.status !== "in_progress") {
     return NextResponse.json({ error: "Interview already completed" }, { status: 400 });
   }
 

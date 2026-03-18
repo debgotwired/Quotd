@@ -14,6 +14,7 @@ function generateShareToken(): string {
 export default function NewInterviewPage() {
   const [customerCompany, setCustomerCompany] = useState("");
   const [productName, setProductName] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -38,6 +39,7 @@ export default function NewInterviewPage() {
         user_id: user.id,
         customer_company: customerCompany,
         product_name: productName,
+        customer_email: customerEmail.trim() || null,
         status: "draft",
         share_token: generateShareToken(),
         extraction_state: {
@@ -105,6 +107,23 @@ export default function NewInterviewPage() {
             required
             className="w-full px-4 py-3 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-300 transition-colors"
           />
+        </div>
+
+        <div>
+          <label htmlFor="customerEmail" className="block text-sm font-medium text-gray-700 mb-2">
+            Customer email <span className="text-gray-400 font-normal">(optional)</span>
+          </label>
+          <input
+            id="customerEmail"
+            type="email"
+            placeholder="customer@company.com"
+            value={customerEmail}
+            onChange={(e) => setCustomerEmail(e.target.value)}
+            className="w-full px-4 py-3 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-300 transition-colors"
+          />
+          <p className="text-xs text-gray-400 mt-1.5">
+            If provided, the customer will be emailed when the draft is ready for review.
+          </p>
         </div>
 
         <button

@@ -18,10 +18,27 @@ export default async function DashboardPage() {
         return "Waiting";
       case "in_progress":
         return "In progress";
-      case "completed":
-        return "Done";
+      case "review_pending":
+        return "Awaiting review";
+      case "review_in_progress":
+        return "Under review";
+      case "review_complete":
+        return "Review done";
       default:
         return status;
+    }
+  };
+
+  const getStatusDotColor = (status: string) => {
+    switch (status) {
+      case "review_pending":
+        return "bg-amber-400";
+      case "review_in_progress":
+        return "bg-blue-400";
+      case "review_complete":
+        return "bg-green-400";
+      default:
+        return "bg-gray-400";
     }
   };
 
@@ -61,7 +78,7 @@ export default async function DashboardPage() {
                 className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 p-4 bg-white border border-gray-200 rounded-lg hover:border-gray-400 transition-colors group"
               >
                 <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-                  <div className="w-2 h-2 rounded-full bg-gray-400 shrink-0" />
+                  <div className={`w-2 h-2 rounded-full ${getStatusDotColor(interview.status)} shrink-0`} />
                   <div className="min-w-0">
                     <span className="font-medium text-gray-900 group-hover:text-black">
                       {interview.customer_company}

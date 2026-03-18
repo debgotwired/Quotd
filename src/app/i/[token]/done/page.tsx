@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { createServiceClient } from "@/lib/supabase/server";
 import type { ExtractionState } from "@/lib/supabase/types";
 
@@ -49,8 +50,15 @@ export default async function InterviewDonePage({
           </div>
         </div>
 
+        <Link
+          href={`/i/${token}/review`}
+          className="inline-block w-full py-3 px-4 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition-colors text-center mb-4"
+        >
+          Review Your Case Study
+        </Link>
+
         <p className="text-sm text-gray-500">
-          The team will be in touch if they need any additional information.
+          Review and approve the draft before it gets published.
         </p>
       </div>
     </div>

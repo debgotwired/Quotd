@@ -3,7 +3,9 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { extractFromAnswer } from "@/lib/ai/extract";
 import { generateNextQuestion } from "@/lib/ai/question";
 import { generateDraft } from "@/lib/ai/draft";
-import { sendInterviewCompletedEmail } from "@/lib/email/send";
+import { sendInterviewCompletedEmail, sendReviewReadyEmail } from "@/lib/email/send";
+import { splitMarkdownIntoSections } from "@/lib/review/sections";
+import { initReviewState } from "@/lib/review/helpers";
 import type { ExtractionState, Message } from "@/lib/supabase/types";
 
 export async function POST(
@@ -29,7 +31,7 @@ export async function POST(
     return NextResponse.json({ error: "Interview not found" }, { status: 404 });
   }
 
-  if (interview.status === "completed") {
+  if (interview.status !== "draft" && interview.status !== "in_progress") {
     return NextResponse.json({ error: "Interview already completed" }, { status: 400 });
   }
 
@@ -107,12 +109,18 @@ export async function POST(
       draft = "";
     }
 
+    // Build initial review state from draft H2 headings
+    const sections = splitMarkdownIntoSections(draft);
+    const headings = sections.map((s) => s.heading);
+    const reviewState = initReviewState(headings);
+
     await supabase
       .from("interviews")
       .update({
-        status: "completed",
+        status: "review_pending",
         extraction_state: newState,
         draft_content: draft,
+        review_state: reviewState,
       })
       .eq("id", interview.id);
 
@@ -131,6 +139,20 @@ export async function POST(
           console.error("Failed to send completion email:", err);
         });
       }
+    }
+
+    // Send review-ready email to customer if email was provided
+    if (interview.customer_email) {
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+      const reviewUrl = `${appUrl}/i/${token}/review`;
+      sendReviewReadyEmail(
+        interview.customer_email,
+        interview.customer_company,
+        interview.product_name,
+        reviewUrl
+      ).catch((err) => {
+        console.error("Failed to send review-ready email:", err);
+      });
     }
 
     return NextResponse.json({

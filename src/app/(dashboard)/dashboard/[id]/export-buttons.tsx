@@ -6,6 +6,14 @@ interface ExportButtonsProps {
   interviewId: string;
 }
 
+const formats = [
+  { key: "md", label: ".md" },
+  { key: "docx", label: ".docx" },
+  { key: "pdf", label: ".pdf" },
+  { key: "html", label: ".html" },
+  { key: "txt", label: ".txt" },
+] as const;
+
 export function ExportButtons({ interviewId }: ExportButtonsProps) {
   const [loading, setLoading] = useState<string | null>(null);
 
@@ -41,27 +49,16 @@ export function ExportButtons({ interviewId }: ExportButtonsProps) {
   return (
     <div className="flex items-center gap-2">
       <span className="text-xs text-gray-400 mr-1">Export:</span>
-      <button
-        onClick={() => handleExport("md")}
-        disabled={loading !== null}
-        className="px-2.5 py-1 text-xs text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 rounded transition-colors disabled:opacity-50"
-      >
-        {loading === "md" ? "..." : ".md"}
-      </button>
-      <button
-        onClick={() => handleExport("html")}
-        disabled={loading !== null}
-        className="px-2.5 py-1 text-xs text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 rounded transition-colors disabled:opacity-50"
-      >
-        {loading === "html" ? "..." : ".html"}
-      </button>
-      <button
-        onClick={() => handleExport("txt")}
-        disabled={loading !== null}
-        className="px-2.5 py-1 text-xs text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 rounded transition-colors disabled:opacity-50"
-      >
-        {loading === "txt" ? "..." : ".txt"}
-      </button>
+      {formats.map(({ key, label }) => (
+        <button
+          key={key}
+          onClick={() => handleExport(key)}
+          disabled={loading !== null}
+          className="px-2.5 py-1 text-xs text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 rounded transition-colors disabled:opacity-50"
+        >
+          {loading === key ? "..." : label}
+        </button>
+      ))}
     </div>
   );
 }

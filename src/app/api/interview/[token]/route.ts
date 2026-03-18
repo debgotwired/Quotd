@@ -32,6 +32,9 @@ export async function GET(
       category: interview.category,
       status: interview.status,
       extraction_state: interview.extraction_state,
+      review_state: interview.review_state || null,
+      customer_draft_content: interview.customer_draft_content || null,
+      draft_content: interview.draft_content || null,
     },
     messages: messages || [],
   });

@@ -4,8 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { CopyButton } from "./copy-button";
 import { ExportButtons } from "./export-buttons";
 import { TranscriptToggle } from "./transcript-toggle";
-import { MarkdownContent } from "./markdown-content";
-import type { ExtractionState, Message } from "@/lib/supabase/types";
+import { DraftEditor } from "@/components/editor/draft-editor";
+import type { ExtractionState, Message, ReviewState } from "@/lib/supabase/types";
 
 export default async function InterviewDetailPage({
   params,
@@ -40,12 +40,18 @@ export default async function InterviewDetailPage({
         return "Waiting for response";
       case "in_progress":
         return "In progress";
-      case "completed":
-        return "Completed";
+      case "review_pending":
+        return "Awaiting customer review";
+      case "review_in_progress":
+        return "Customer reviewing";
+      case "review_complete":
+        return "Review complete";
       default:
         return status;
     }
   };
+
+  const reviewState = interview.review_state as ReviewState | null;
 
   const extractionState = interview.extraction_state as ExtractionState | null;
   const hasResults = (extractionState?.metrics?.length || 0) > 0 ||
@@ -77,10 +83,50 @@ export default async function InterviewDetailPage({
         <code className="block text-sm text-gray-600 break-all font-mono">{shareUrl}</code>
       </div>
 
+      {/* Customer Review Status */}
+      {reviewState && reviewState.sections.length > 0 && (
+        <div>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Customer Review</h2>
+          <div className="space-y-3">
+            {reviewState.sections.map((section) => (
+              <div key={section.id} className="flex items-start justify-between p-4 bg-white border border-gray-200 rounded-xl">
+                <div className="min-w-0">
+                  <span className="font-medium text-sm text-gray-900">{section.heading}</span>
+                  {section.comment && (
+                    <p className="text-sm text-gray-500 mt-1">{section.comment}</p>
+                  )}
+                </div>
+                <span className={`text-xs font-medium px-2.5 py-1 rounded-lg shrink-0 ml-3 ${
+                  section.status === "approved"
+                    ? "bg-green-100 text-green-800"
+                    : section.status === "flagged"
+                    ? "bg-amber-100 text-amber-800"
+                    : "bg-gray-100 text-gray-500"
+                }`}>
+                  {section.status === "approved" ? "Approved" : section.status === "flagged" ? "Flagged" : "Pending"}
+                </span>
+              </div>
+            ))}
+          </div>
+          {interview.customer_draft_content && (
+            <div className="mt-4">
+              <h3 className="text-sm font-medium text-gray-700 mb-2">Customer Edits</h3>
+              <div className="border border-gray-200 rounded-xl p-4 bg-gray-50">
+                <DraftEditor
+                  content={interview.customer_draft_content}
+                  interviewId={interview.id}
+                  readOnly
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Results Section */}
       {hasResults ? (
         <div className="space-y-8">
-          {/* Generated Draft - Front and Center */}
+          {/* Generated Draft - Editable */}
           {interview.draft_content && (
             <div>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
@@ -90,9 +136,10 @@ export default async function InterviewDetailPage({
                   <CopyButton text={interview.draft_content} label="Copy" />
                 </div>
               </div>
-              <div className="bg-white border border-gray-200 rounded-xl p-6 sm:p-8">
-                <MarkdownContent content={interview.draft_content} />
-              </div>
+              <DraftEditor
+                content={interview.draft_content}
+                interviewId={interview.id}
+              />
             </div>
           )}
 

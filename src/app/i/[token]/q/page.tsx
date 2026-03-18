@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ChatMessage } from "@/components/chat/chat-message";
 import { VoiceFirstInput, type AttachedFile, type AudioData } from "@/components/chat/voice-first-input";
+import { isInterviewDone } from "@/lib/review/helpers";
 
 type Message = {
   id: string;
@@ -57,7 +58,7 @@ export default function InterviewChatPage() {
     setInterview(data);
     setMessages(data.messages || []);
 
-    if (data.interview.status === "completed") {
+    if (isInterviewDone(data.interview.status)) {
       router.push(`/i/${token}/done`);
       return null;
     }

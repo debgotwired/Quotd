@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createServiceClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
+import { isInterviewDone } from "@/lib/review/helpers";
 
 export default async function InterviewWelcomePage({
   params,
@@ -31,7 +32,23 @@ export default async function InterviewWelcomePage({
   const isResuming = (messages?.length ?? 0) > 0 && interview.status === "in_progress";
   const questionCount = messages?.filter((m) => m.role === "user").length ?? 0;
 
-  if (interview.status === "completed") {
+  if (isInterviewDone(interview.status)) {
+    if (interview.status === "review_complete") {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-white px-4">
+          <div className="w-full max-w-md text-center">
+            <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg className="w-7 h-7 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h1 className="text-2xl font-semibold text-gray-900 mb-2">Review Submitted</h1>
+            <p className="text-gray-500">Thank you! Your review has been submitted.</p>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="min-h-screen flex items-center justify-center bg-white px-4">
         <div className="w-full max-w-md text-center">
@@ -41,7 +58,12 @@ export default async function InterviewWelcomePage({
             </svg>
           </div>
           <h1 className="text-2xl font-semibold text-gray-900 mb-2">Interview Completed</h1>
-          <p className="text-gray-500">Thank you! This interview has already been completed.</p>
+          <p className="text-gray-500 mb-6">Your case study draft is ready for review.</p>
+          <Link href={`/i/${token}/review`}>
+            <Button size="lg" className="w-full h-12 text-base bg-gray-900 hover:bg-gray-800">
+              Review Your Case Study
+            </Button>
+          </Link>
         </div>
       </div>
     );
