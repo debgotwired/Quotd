@@ -244,7 +244,7 @@ export default function LoginPage() {
                       onChange={(e) => handleCodeChange(index, e.target.value)}
                       onKeyDown={(e) => handleCodeKeyDown(index, e)}
                       disabled={loading}
-                      className="w-12 h-14 text-center text-xl font-semibold border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-300 transition-colors disabled:opacity-50"
+                      className="w-10 h-12 sm:w-12 sm:h-14 text-center text-lg sm:text-xl font-semibold border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-300 transition-colors disabled:opacity-50"
                     />
                   ))}
                 </div>

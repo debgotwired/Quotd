@@ -30,17 +30,17 @@ export default async function DashboardLayout({
   return (
     <div className="min-h-screen bg-white">
       <nav className="border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-6 py-4 flex justify-between items-center">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
           <Link href="/dashboard" className="text-lg font-semibold text-gray-900">
             Quotd
           </Link>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-400">{profile.full_name}</span>
+          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+            <span className="text-sm text-gray-400 truncate">{profile.full_name}</span>
             <LogoutButton />
           </div>
         </div>
       </nav>
-      <main className="max-w-4xl mx-auto px-6 py-10">{children}</main>
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-10">{children}</main>
     </div>
   );
 }

@@ -69,7 +69,7 @@ export default async function InterviewDetailPage({
       </div>
 
       {/* Share Link - Prominent */}
-      <div className="bg-gray-100 rounded-xl p-6">
+      <div className="bg-gray-100 rounded-xl p-4 sm:p-6">
         <div className="flex items-center justify-between mb-3">
           <span className="text-sm font-medium text-gray-700">Interview link</span>
           <CopyButton text={shareUrl} />
@@ -83,9 +83,9 @@ export default async function InterviewDetailPage({
           {/* Generated Draft - Front and Center */}
           {interview.draft_content && (
             <div>
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                 <h2 className="text-lg font-semibold text-gray-900">Case Study Draft</h2>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3 sm:gap-4">
                   <ExportButtons interviewId={interview.id} />
                   <CopyButton text={interview.draft_content} label="Copy" />
                 </div>
@@ -143,7 +143,7 @@ export default async function InterviewDetailPage({
           {extractionState?.facts && (extractionState.facts.challenge || extractionState.facts.solution || extractionState.facts.impact) && (
             <div>
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Key Facts</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {extractionState.facts.challenge && (
                   <div className="bg-white border border-gray-200 rounded-xl p-5">
                     <p className="text-xs text-gray-400 uppercase tracking-wide mb-2">Challenge</p>

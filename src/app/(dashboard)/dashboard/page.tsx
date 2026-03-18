@@ -58,11 +58,11 @@ export default async function DashboardPage() {
               <Link
                 key={interview.id}
                 href={`/dashboard/${interview.id}`}
-                className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:border-gray-400 transition-colors group"
+                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 p-4 bg-white border border-gray-200 rounded-lg hover:border-gray-400 transition-colors group"
               >
-                <div className="flex items-center gap-4">
-                  <div className="w-2 h-2 rounded-full bg-gray-400" />
-                  <div>
+                <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                  <div className="w-2 h-2 rounded-full bg-gray-400 shrink-0" />
+                  <div className="min-w-0">
                     <span className="font-medium text-gray-900 group-hover:text-black">
                       {interview.customer_company}
                     </span>
@@ -70,18 +70,18 @@ export default async function DashboardPage() {
                     <span className="text-gray-500 text-sm">{interview.product_name}</span>
                   </div>
                 </div>
-                <div className="flex items-center gap-6 text-sm">
+                <div className="flex items-center gap-3 sm:gap-6 text-sm pl-5 sm:pl-0 shrink-0">
                   {(metricsCount > 0 || quotesCount > 0) && (
-                    <span className="text-gray-400">
+                    <span className="text-gray-400 hidden sm:inline">
                       {metricsCount > 0 && `${metricsCount} metrics`}
                       {metricsCount > 0 && quotesCount > 0 && ", "}
                       {quotesCount > 0 && `${quotesCount} quotes`}
                     </span>
                   )}
-                  <span className="text-gray-500 w-20 text-right">
+                  <span className="text-gray-500">
                     {getStatusLabel(interview.status)}
                   </span>
-                  <svg className="w-4 h-4 text-gray-400 group-hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-gray-400 group-hover:text-gray-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
                   </svg>
                 </div>
