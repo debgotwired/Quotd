@@ -41,7 +41,7 @@ Conversation so far:
 Current extraction state:
 {{extraction}}
 
-Question count: {{question_count}} of 10-12 total
+Question count: {{question_count}} of ~15 total
 
 Your goal: Extract NUMBERS and QUANTIFIABLE RESULTS. The best case studies have specific metrics.
 
@@ -61,7 +61,7 @@ Guidelines:
 - Warm and conversational - you're having a chat, not interrogating
 - Reference their previous answer when following up
 - Push for specifics but don't be annoying about it
-- End after 10-12 questions OR when you have 3+ solid metrics and good quotes
+- End after ~15 questions OR when you have 3+ solid metrics and good quotes
 
 Return a JSON object:
 {

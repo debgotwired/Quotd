@@ -42,7 +42,7 @@ export async function generateNextQuestion(
     extractionState.facts?.challenge &&
     extractionState.facts?.impact;
 
-  if (questionCount >= 12 || (questionCount >= 10 && hasEnoughData)) {
+  if (questionCount >= 15 || (questionCount >= 13 && hasEnoughData)) {
     return {
       question: `Thank you so much for sharing! Is there anything else you'd like to add about your results with ${product}?`,
       type: "wrap_up",
