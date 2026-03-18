@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
+import { getBrandingForInterview } from "@/lib/branding/get-branding";
 
 export async function GET(
   request: NextRequest,
@@ -18,11 +19,14 @@ export async function GET(
     return NextResponse.json({ error: "Interview not found" }, { status: 404 });
   }
 
-  const { data: messages } = await supabase
-    .from("messages")
-    .select("*")
-    .eq("interview_id", interview.id)
-    .order("created_at", { ascending: true });
+  const [{ data: messages }, branding] = await Promise.all([
+    supabase
+      .from("messages")
+      .select("*")
+      .eq("interview_id", interview.id)
+      .order("created_at", { ascending: true }),
+    getBrandingForInterview(supabase, interview.user_id),
+  ]);
 
   return NextResponse.json({
     interview: {
@@ -35,7 +39,9 @@ export async function GET(
       review_state: interview.review_state || null,
       customer_draft_content: interview.customer_draft_content || null,
       draft_content: interview.draft_content || null,
+      question_limit: interview.question_limit ?? 15,
     },
+    branding,
     messages: messages || [],
   });
 }

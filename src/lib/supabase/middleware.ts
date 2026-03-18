@@ -88,7 +88,13 @@ export async function updateSession(request: NextRequest) {
       .single();
 
     const url = request.nextUrl.clone();
-    url.pathname = profile ? "/dashboard" : "/onboarding";
+    const redirectTo = request.nextUrl.searchParams.get("redirect");
+    if (profile && redirectTo && redirectTo.startsWith("/")) {
+      url.pathname = redirectTo;
+      url.search = "";
+    } else {
+      url.pathname = profile ? "/dashboard" : "/onboarding";
+    }
     return NextResponse.redirect(url);
   }
 

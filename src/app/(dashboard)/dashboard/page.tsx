@@ -1,16 +1,37 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { getUserTeamIds } from "@/lib/teams/helpers";
 import type { ExtractionState } from "@/lib/supabase/types";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  const { data: interviews } = await supabase
+  // Get personal interviews
+  const { data: personalInterviews } = await supabase
     .from("interviews")
     .select("*")
     .eq("user_id", user!.id)
     .order("created_at", { ascending: false });
+
+  // Get team interviews
+  const teamIds = await getUserTeamIds(supabase, user!.id);
+  let teamInterviews: typeof personalInterviews = [];
+
+  if (teamIds.length > 0) {
+    const { data } = await supabase
+      .from("interviews")
+      .select("*")
+      .in("team_id", teamIds)
+      .neq("user_id", user!.id)
+      .order("created_at", { ascending: false });
+    teamInterviews = data || [];
+  }
+
+  const interviews = [
+    ...(personalInterviews || []).map((i) => ({ ...i, _source: "personal" as const })),
+    ...(teamInterviews || []).map((i) => ({ ...i, _source: "team" as const })),
+  ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
   const getStatusLabel = (status: string) => {
     switch (status) {
@@ -46,12 +67,20 @@ export default async function DashboardPage() {
     <div className="space-y-8">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-semibold text-gray-900">Interviews</h1>
-        <Link
-          href="/dashboard/new"
-          className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
-        >
-          New
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/dashboard/bulk"
+            className="px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+          >
+            Bulk Create
+          </Link>
+          <Link
+            href="/dashboard/new"
+            className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
+          >
+            New
+          </Link>
+        </div>
       </div>
 
       {!interviews || interviews.length === 0 ? (
@@ -85,6 +114,9 @@ export default async function DashboardPage() {
                     </span>
                     <span className="text-gray-400 mx-2">·</span>
                     <span className="text-gray-500 text-sm">{interview.product_name}</span>
+                    {"_source" in interview && interview._source === "team" && (
+                      <span className="ml-2 text-xs text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">team</span>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-3 sm:gap-6 text-sm pl-5 sm:pl-0 shrink-0">

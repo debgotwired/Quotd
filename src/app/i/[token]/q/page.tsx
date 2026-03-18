@@ -13,6 +13,13 @@ type Message = {
   files?: AttachedFile[];
 };
 
+type BrandingData = {
+  logo_url: string | null;
+  primary_color: string;
+  welcome_message: string | null;
+  company_name: string;
+};
+
 type InterviewData = {
   interview: {
     id: string;
@@ -20,7 +27,9 @@ type InterviewData = {
     product_name: string;
     category: string;
     status: string;
+    question_limit: number;
   };
+  branding?: BrandingData;
   messages: Message[];
 };
 
@@ -31,6 +40,7 @@ export default function InterviewChatPage() {
 
   const [interview, setInterview] = useState<InterviewData | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
+  const primaryColor = interview?.branding?.primary_color || "#1a1a1a";
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
@@ -193,7 +203,7 @@ export default function InterviewChatPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 mx-auto" style={{ borderColor: primaryColor }} />
           <p className="mt-4 text-gray-500">Loading...</p>
         </div>
       </div>
@@ -231,12 +241,12 @@ export default function InterviewChatPage() {
           </div>
           <div className="flex items-center gap-2">
             <span className="text-xs text-gray-400">
-              {questionCount}/15
+              {questionCount}/{interview?.interview.question_limit || 15}
             </span>
             <div className="w-12 sm:w-16 h-1 bg-gray-200 rounded-full overflow-hidden">
               <div
-                className="h-full bg-gray-900 rounded-full transition-all duration-300"
-                style={{ width: `${Math.min((questionCount / 15) * 100, 100)}%` }}
+                className="h-full rounded-full transition-all duration-300"
+                style={{ width: `${Math.min((questionCount / (interview?.interview.question_limit || 15)) * 100, 100)}%`, backgroundColor: primaryColor }}
               />
             </div>
           </div>
@@ -250,7 +260,7 @@ export default function InterviewChatPage() {
           {showResumeNotice && (
             <div className="bg-gray-100 rounded-lg px-4 py-3 flex items-center justify-between animate-in fade-in slide-in-from-top-2 duration-300">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-gray-900 rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: primaryColor }}>
                   <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>

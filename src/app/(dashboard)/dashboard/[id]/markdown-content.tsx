@@ -69,14 +69,52 @@ export function MarkdownContent({ content }: MarkdownContentProps) {
     };
 
     const renderInline = (text: string): React.ReactNode => {
-      // Bold
-      text = text.replace(/\*\*([^*]+)\*\*/g, '<strong class="font-semibold">$1</strong>');
-      // Italic
-      text = text.replace(/\*([^*]+)\*/g, '<em class="italic">$1</em>');
-      // Code
-      text = text.replace(/`([^`]+)`/g, '<code class="bg-gray-100 px-1.5 py-0.5 rounded text-sm font-mono">$1</code>');
+      // Split on bold, italic, and code patterns and return React elements
+      const parts: React.ReactNode[] = [];
+      let remaining = text;
+      let partKey = 0;
 
-      return <span dangerouslySetInnerHTML={{ __html: text }} />;
+      while (remaining.length > 0) {
+        // Find the earliest match among bold, italic, code
+        const boldMatch = remaining.match(/\*\*([^*]+)\*\*/);
+        const italicMatch = remaining.match(/\*([^*]+)\*/);
+        const codeMatch = remaining.match(/`([^`]+)`/);
+
+        const matches = [
+          boldMatch ? { type: "bold" as const, match: boldMatch } : null,
+          italicMatch ? { type: "italic" as const, match: italicMatch } : null,
+          codeMatch ? { type: "code" as const, match: codeMatch } : null,
+        ]
+          .filter((m): m is NonNullable<typeof m> => m !== null && m.match.index !== undefined)
+          .sort((a, b) => a.match.index! - b.match.index!);
+
+        if (matches.length === 0) {
+          parts.push(remaining);
+          break;
+        }
+
+        const first = matches[0];
+        const idx = first.match.index!;
+
+        // Add text before the match
+        if (idx > 0) {
+          parts.push(remaining.slice(0, idx));
+        }
+
+        // Add the formatted element
+        const inner = first.match[1];
+        if (first.type === "bold") {
+          parts.push(<strong key={partKey++} className="font-semibold">{inner}</strong>);
+        } else if (first.type === "italic") {
+          parts.push(<em key={partKey++} className="italic">{inner}</em>);
+        } else {
+          parts.push(<code key={partKey++} className="bg-gray-100 px-1.5 py-0.5 rounded text-sm font-mono">{inner}</code>);
+        }
+
+        remaining = remaining.slice(idx + first.match[0].length);
+      }
+
+      return <span>{parts}</span>;
     };
 
     for (let i = 0; i < lines.length; i++) {

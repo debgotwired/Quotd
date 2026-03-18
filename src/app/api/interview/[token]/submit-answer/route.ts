@@ -3,6 +3,8 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { extractFromAnswer } from "@/lib/ai/extract";
 import { generateNextQuestion } from "@/lib/ai/question";
 import { generateDraft } from "@/lib/ai/draft";
+import { buildCustomerContext, buildInterviewSettings } from "@/lib/ai/context";
+import { getBrandingForInterview } from "@/lib/branding/get-branding";
 import { sendInterviewCompletedEmail, sendReviewReadyEmail } from "@/lib/email/send";
 import { splitMarkdownIntoSections } from "@/lib/review/sections";
 import { initReviewState } from "@/lib/review/helpers";
@@ -56,6 +58,16 @@ export async function POST(
   });
 
   const currentState = interview.extraction_state as ExtractionState;
+  const customerContext = buildCustomerContext(
+    interview.linkedin_profile_url,
+    interview.company_website_url
+  );
+  const interviewSettings = buildInterviewSettings(
+    interview.interview_tone,
+    interview.interview_focus,
+    interview.target_audience
+  );
+  const questionLimit = interview.question_limit ?? 15;
 
   let newState: ExtractionState;
   try {
@@ -82,7 +94,10 @@ export async function POST(
       interview.product_name,
       interview.customer_company,
       (updatedMessages || []) as Message[],
-      newState
+      newState,
+      customerContext,
+      questionLimit,
+      interviewSettings
     );
   } catch (err) {
     console.error("AI question generation failed:", err);
@@ -102,7 +117,9 @@ export async function POST(
         interview.customer_company,
         interview.product_name,
         newState,
-        (updatedMessages || []) as Message[]
+        (updatedMessages || []) as Message[],
+        customerContext,
+        interviewSettings
       );
     } catch (err) {
       console.error("AI draft generation failed:", err);
@@ -124,6 +141,9 @@ export async function POST(
       })
       .eq("id", interview.id);
 
+    // Fetch branding for emails
+    const branding = await getBrandingForInterview(supabase, interview.user_id);
+
     // Send completion notification to interview owner
     if (interview.user_id) {
       const { data: userData } = await supabase.auth.admin.getUserById(
@@ -134,7 +154,9 @@ export async function POST(
           userData.user.email,
           interview.customer_company,
           interview.product_name,
-          interview.id
+          interview.id,
+          branding.primary_color,
+          branding.logo_url
         ).catch((err) => {
           console.error("Failed to send completion email:", err);
         });
@@ -149,7 +171,9 @@ export async function POST(
         interview.customer_email,
         interview.customer_company,
         interview.product_name,
-        reviewUrl
+        reviewUrl,
+        branding.primary_color,
+        branding.logo_url
       ).catch((err) => {
         console.error("Failed to send review-ready email:", err);
       });

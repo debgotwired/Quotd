@@ -1,0 +1,3 @@
+ALTER TABLE interviews
+  ADD COLUMN IF NOT EXISTS linkedin_profile_url TEXT DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS company_website_url TEXT DEFAULT NULL;

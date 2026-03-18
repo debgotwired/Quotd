@@ -23,7 +23,7 @@ export async function POST(
     return NextResponse.json({ error: "Review not available" }, { status: 400 });
   }
 
-  const currentReviewState = interview.review_state as ReviewState | null;
+  const currentReviewState = (interview.review_state as ReviewState | null) ?? {};
 
   const { error: updateError } = await supabase
     .from("interviews")

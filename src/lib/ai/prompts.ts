@@ -34,6 +34,10 @@ Return a JSON object with this structure:
 }`;
 
 export const QUESTION_GENERATOR_PROMPT = `You're a skilled interviewer gathering a customer success story about {{product}} for {{company}}.
+{{customerContext}}
+If customer context is provided, use it to ask more specific, industry-relevant questions.
+{{interviewSettings}}
+If interview settings are provided, adapt your tone, focus, and question style accordingly.
 
 Conversation so far:
 {{conversation}}
@@ -41,7 +45,7 @@ Conversation so far:
 Current extraction state:
 {{extraction}}
 
-Question count: {{question_count}} of ~15 total
+Question count: {{question_count}} of ~{{questionLimit}} total
 
 Your goal: Extract NUMBERS and QUANTIFIABLE RESULTS. The best case studies have specific metrics.
 
@@ -58,10 +62,10 @@ Generate the next question. Be adaptive:
 
 Guidelines:
 - One clear question, under 25 words
-- Warm and conversational - you're having a chat, not interrogating
+- Match the interview tone setting if provided
 - Reference their previous answer when following up
 - Push for specifics but don't be annoying about it
-- End after ~15 questions OR when you have 3+ solid metrics and good quotes
+- End after ~{{questionLimit}} questions OR when you have 3+ solid metrics and good quotes
 
 Return a JSON object:
 {
@@ -71,11 +75,15 @@ Return a JSON object:
 }`;
 
 export const FIRST_QUESTION_PROMPT = `You're starting an interview for a case study about {{product}} with someone from {{company}}.
+{{customerContext}}
+If customer context URLs are provided, use what you know about the company/person to make your question more relevant and personal.
+{{interviewSettings}}
+If interview settings are provided, match the specified tone from the very first question.
 
 Generate a warm opening question that:
 - Puts the customer at ease
 - Gets them talking about their role or the problem they were trying to solve
-- Is natural and conversational
+- Matches the interview tone if specified
 - Under 20 words
 
 Return a JSON object:
@@ -89,6 +97,10 @@ export const DRAFT_GENERATOR_PROMPT = `Generate a compelling 1-page case study f
 
 Company: {{company}}
 Product: {{product}}
+{{customerContext}}
+If customer context URLs are provided, use what you know about the company to add relevant industry framing.
+{{interviewSettings}}
+If interview settings are provided, adapt the writing tone, emphasis, and framing to match them.
 
 Extraction Data:
 {{extraction}}
@@ -127,3 +139,135 @@ Rules:
 - Make numbers prominent and easy to scan
 - Keep it factual but compelling
 - Output in Markdown format`;
+
+// --- Content Format Prompts ---
+
+export const FORMAT_ONE_PAGER_PROMPT = `Write a concise executive briefing (~300 words) based on this case study.
+
+Company: {{company}}
+Product: {{product}}
+
+Extraction Data:
+{{extraction}}
+
+Case Study Draft:
+{{draft}}
+
+Structure:
+- Opening line with the most impressive metric
+- Challenge (2-3 sentences)
+- Solution (2-3 sentences)
+- Results with top 3 metrics as bullet points
+- One compelling customer quote
+
+Rules:
+- Use ONLY information from the case study draft and extraction data below
+- Never invent metrics, quotes, or claims not present in the source material
+- Output format: Markdown`;
+
+export const FORMAT_LINKEDIN_PROMPT = `Write a professional LinkedIn post (~150 words) based on this case study.
+
+Company: {{company}}
+Product: {{product}}
+
+Extraction Data:
+{{extraction}}
+
+Case Study Draft:
+{{draft}}
+
+Structure:
+- Hook line with a standout metric or result
+- 1-3 short paragraphs telling the transformation story
+- End with a subtle call-to-action or takeaway
+
+Rules:
+- Use ONLY information from the case study draft and extraction data below
+- Never invent metrics, quotes, or claims not present in the source material
+- Professional but engaging tone — not salesy
+- Output format: plain text (no markdown formatting)`;
+
+export const FORMAT_TWITTER_PROMPT = `Write a Twitter/X post (MAXIMUM 280 characters) based on this case study.
+
+Company: {{company}}
+Product: {{product}}
+
+Extraction Data:
+{{extraction}}
+
+Case Study Draft:
+{{draft}}
+
+Rules:
+- Use ONLY information from the case study draft and extraction data below
+- Never invent metrics, quotes, or claims not present in the source material
+- Lead with the most impressive number
+- Include a short quote snippet if it fits
+- Output format: plain text, strictly under 280 characters`;
+
+export const FORMAT_SALES_SLIDE_PROMPT = `Create content for a single sales slide based on this case study.
+
+Company: {{company}}
+Product: {{product}}
+
+Extraction Data:
+{{extraction}}
+
+Case Study Draft:
+{{draft}}
+
+Structure:
+# [Headline with the most impressive metric]
+
+> "[Best customer quote]"
+
+| Before | After |
+|--------|-------|
+[2-4 rows comparing before/after states]
+
+**Key Takeaway:** [One sentence summary of the transformation]
+
+Rules:
+- Use ONLY information from the case study draft and extraction data below
+- Never invent metrics, quotes, or claims not present in the source material
+- Output format: Markdown`;
+
+export const FORMAT_QUOTE_CARDS_PROMPT = `Extract the best customer quotes from this case study for use as standalone quote cards.
+
+Company: {{company}}
+Product: {{product}}
+
+Extraction Data:
+{{extraction}}
+
+Case Study Draft:
+{{draft}}
+
+For each quote, provide the verbatim text and a short tag describing its theme.
+
+Rules:
+- Use ONLY quotes that appear in the case study draft or extraction data
+- Never invent or paraphrase quotes
+- Tags should be one of: impact, challenge, praise, outcome, transformation`;
+
+export const FORMAT_EMAIL_BLURB_PROMPT = `Write a 2-3 paragraph sales email blurb based on this case study.
+
+Company: {{company}}
+Product: {{product}}
+
+Extraction Data:
+{{extraction}}
+
+Case Study Draft:
+{{draft}}
+
+Structure:
+- Opening paragraph: hook with the key metric/result
+- Middle paragraph: brief story of the transformation with a customer quote
+- Closing paragraph: call-to-action suggesting the reader can achieve similar results
+
+Rules:
+- Use ONLY information from the case study draft and extraction data below
+- Never invent metrics, quotes, or claims not present in the source material
+- Professional, warm tone — not pushy
+- Output format: plain text (no markdown formatting)`;

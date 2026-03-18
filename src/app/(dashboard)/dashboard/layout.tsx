@@ -35,6 +35,12 @@ export default async function DashboardLayout({
             Quotd
           </Link>
           <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+            <Link href="/dashboard/team" className="text-sm text-gray-400 hover:text-gray-600 transition-colors">
+              Team
+            </Link>
+            <Link href="/dashboard/settings" className="text-sm text-gray-400 hover:text-gray-600 transition-colors">
+              Settings
+            </Link>
             <span className="text-sm text-gray-400 truncate">{profile.full_name}</span>
             <LogoutButton />
           </div>

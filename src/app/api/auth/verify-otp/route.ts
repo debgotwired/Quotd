@@ -16,7 +16,10 @@ const MAX_VERIFY_REQUESTS = 10; // Max 10 verify attempts per minute
 const USER_PASSWORD_PREFIX = "quotd_secure_";
 
 function generateUserPassword(email: string): string {
-  return USER_PASSWORD_PREFIX + Buffer.from(email).toString("base64") + "_" + process.env.SUPABASE_SERVICE_ROLE_KEY?.slice(-16);
+  const crypto = require("crypto");
+  const secret = process.env.OTP_PASSWORD_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || "fallback";
+  const hmac = crypto.createHmac("sha256", secret).update(email.toLowerCase()).digest("hex");
+  return USER_PASSWORD_PREFIX + hmac;
 }
 
 function checkRateLimit(ip: string): { allowed: boolean; retryAfter?: number } {
@@ -137,42 +140,47 @@ export async function POST(request: NextRequest) {
       .update({ verified: true })
       .eq("id", otpToken.id);
 
-    // Check if user exists
-    const { data: existingUsers } = await serviceClient.auth.admin.listUsers();
-    const existingUser = existingUsers?.users?.find(
-      (u) => u.email?.toLowerCase() === normalizedEmail
-    );
-
     let userId: string;
     let isNewUser = false;
     const userPassword = generateUserPassword(normalizedEmail);
 
-    if (existingUser) {
-      userId = existingUser.id;
-
-      // Update password to ensure we can sign in
-      await serviceClient.auth.admin.updateUserById(userId, {
+    // Try to create user first (avoids scanning all users in the new-user case)
+    const { data: newUser, error: createError } =
+      await serviceClient.auth.admin.createUser({
+        email: normalizedEmail,
         password: userPassword,
+        email_confirm: true,
       });
-    } else {
-      // Create new user
-      const { data: newUser, error: createError } =
-        await serviceClient.auth.admin.createUser({
-          email: normalizedEmail,
-          password: userPassword,
-          email_confirm: true,
-        });
 
-      if (createError || !newUser.user) {
-        console.error("Failed to create user:", createError);
+    if (!createError && newUser.user) {
+      userId = newUser.user.id;
+      isNewUser = true;
+    } else {
+      // User already exists — find them by paginating (handles any user count)
+      let existingUser = null;
+      let page = 1;
+      const perPage = 100;
+      while (!existingUser) {
+        const { data: { users } } = await serviceClient.auth.admin.listUsers({ page, perPage });
+        if (!users || users.length === 0) break;
+        existingUser = users.find((u) => u.email?.toLowerCase() === normalizedEmail);
+        if (users.length < perPage) break; // last page
+        page++;
+      }
+
+      if (!existingUser) {
+        console.error("User creation failed and user not found:", createError);
         return NextResponse.json(
           { error: "Failed to create account" },
           { status: 500 }
         );
       }
 
-      userId = newUser.user.id;
-      isNewUser = true;
+      userId = existingUser.id;
+      // Update password to ensure we can sign in
+      await serviceClient.auth.admin.updateUserById(userId, {
+        password: userPassword,
+      });
     }
 
     // Now sign in the user using the regular client with cookies

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
 import { generateFirstQuestion, generateNextQuestion } from "@/lib/ai/question";
+import { buildCustomerContext, buildInterviewSettings } from "@/lib/ai/context";
 import type { ExtractionState, Message } from "@/lib/supabase/types";
 
 export async function POST(
@@ -31,13 +32,25 @@ export async function POST(
     .order("created_at", { ascending: true });
 
   const extractionState = interview.extraction_state as ExtractionState;
+  const customerContext = buildCustomerContext(
+    interview.linkedin_profile_url,
+    interview.company_website_url
+  );
+  const interviewSettings = buildInterviewSettings(
+    interview.interview_tone,
+    interview.interview_focus,
+    interview.target_audience
+  );
+  const questionLimit = interview.question_limit ?? 15;
   let questionResponse;
 
   try {
     if (!messages || messages.length === 0) {
       questionResponse = await generateFirstQuestion(
         interview.product_name,
-        interview.customer_company
+        interview.customer_company,
+        customerContext,
+        interviewSettings
       );
 
       await supabase
@@ -49,7 +62,10 @@ export async function POST(
         interview.product_name,
         interview.customer_company,
         messages as Message[],
-        extractionState
+        extractionState,
+        customerContext,
+        questionLimit,
+        interviewSettings
       );
     }
   } catch (err) {

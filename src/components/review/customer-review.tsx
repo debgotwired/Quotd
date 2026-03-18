@@ -4,7 +4,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { DraftEditor } from "@/components/editor/draft-editor";
 import { ReviewProgress } from "./review-progress";
 import { SectionChecklist } from "./section-checklist";
-import type { ReviewState, ReviewSection } from "@/lib/supabase/types";
+import type { ReviewState, ReviewSection, Branding } from "@/lib/supabase/types";
 
 interface CustomerReviewProps {
   token: string;
@@ -14,6 +14,7 @@ interface CustomerReviewProps {
   customerDraftContent: string | null;
   initialReviewState: ReviewState;
   status: string;
+  branding?: Branding;
 }
 
 export function CustomerReview({
@@ -24,7 +25,9 @@ export function CustomerReview({
   customerDraftContent,
   initialReviewState,
   status,
+  branding,
 }: CustomerReviewProps) {
+  const primaryColor = branding?.primary_color || "#1a1a1a";
   const [sections, setSections] = useState<ReviewSection[]>(initialReviewState.sections);
   const [submitted, setSubmitted] = useState(status === "review_complete");
   const [submitting, setSubmitting] = useState(false);
@@ -164,7 +167,8 @@ export function CustomerReview({
             type="button"
             onClick={handleSubmit}
             disabled={!allReviewed || submitting}
-            className="w-full py-3 px-4 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="w-full py-3 px-4 text-white font-medium rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            style={{ backgroundColor: primaryColor }}
           >
             {submitting ? "Submitting..." : "Submit Review"}
           </button>

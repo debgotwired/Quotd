@@ -31,6 +31,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No interview token provided" }, { status: 400 });
     }
 
+    // Validate interview token exists
+    const supabaseCheck = await createServiceClient();
+    const { data: interview } = await supabaseCheck
+      .from("interviews")
+      .select("id")
+      .eq("share_token", interviewToken)
+      .single();
+
+    if (!interview) {
+      return NextResponse.json({ error: "Invalid interview token" }, { status: 403 });
+    }
+
     // Validate file size
     if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json(

@@ -15,12 +15,16 @@ interface InterviewCompletedEmailProps {
   customerCompany: string;
   productName: string;
   interviewUrl: string;
+  brandColor?: string;
+  logoUrl?: string | null;
 }
 
 export function InterviewCompletedEmail({
   customerCompany,
   productName,
   interviewUrl,
+  brandColor = "#1a1a1a",
+  logoUrl,
 }: InterviewCompletedEmailProps) {
   return (
     <Html>
@@ -30,7 +34,12 @@ export function InterviewCompletedEmail({
       </Preview>
       <Body style={main}>
         <Container style={container}>
-          <Heading style={heading}>Interview Completed</Heading>
+          {logoUrl && (
+            <Section style={{ textAlign: "center" as const, marginBottom: "24px" }}>
+              <img src={logoUrl} alt="" style={{ height: "40px", margin: "0 auto" }} />
+            </Section>
+          )}
+          <Heading style={{ ...heading, color: brandColor }}>Interview Completed</Heading>
           <Text style={paragraph}>
             Great news! The case study interview with{" "}
             <strong>{customerCompany}</strong> about{" "}
@@ -40,7 +49,7 @@ export function InterviewCompletedEmail({
             The draft case study is ready for your review.
           </Text>
           <Section style={buttonContainer}>
-            <Button style={button} href={interviewUrl}>
+            <Button style={{ ...button, backgroundColor: brandColor }} href={interviewUrl}>
               View Case Study
             </Button>
           </Section>

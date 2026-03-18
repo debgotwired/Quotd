@@ -21,27 +21,39 @@ export async function POST(request: NextRequest) {
     if (token) {
       try {
         const supabase = await createServiceClient();
-        const timestamp = Date.now();
-        const randomId = Math.random().toString(36).slice(2, 8);
-        const fileName = `audio/${token}/${timestamp}-${randomId}.webm`;
 
-        const { error: uploadError } = await supabase.storage
-          .from("interview-files")
-          .upload(fileName, arrayBuffer, {
-            contentType: audioFile.type || "audio/webm",
-            upsert: false,
-          });
+        // Validate interview token exists before storing audio
+        const { data: interviewCheck } = await supabase
+          .from("interviews")
+          .select("id")
+          .eq("share_token", token)
+          .single();
 
-        if (uploadError) {
-          console.error("[Transcribe] Storage upload error:", uploadError);
+        if (!interviewCheck) {
+          console.warn("[Transcribe] Invalid interview token, skipping storage");
         } else {
-          const { data: urlData } = supabase.storage
-            .from("interview-files")
-            .getPublicUrl(fileName);
+          const timestamp = Date.now();
+          const randomId = Math.random().toString(36).slice(2, 8);
+          const fileName = `audio/${token}/${timestamp}-${randomId}.webm`;
 
-          audioUrl = urlData.publicUrl;
-          audioPath = fileName;
-          console.log(`[Transcribe] Audio saved: ${audioPath}`);
+          const { error: uploadError } = await supabase.storage
+            .from("interview-files")
+            .upload(fileName, arrayBuffer, {
+              contentType: audioFile.type || "audio/webm",
+              upsert: false,
+            });
+
+          if (uploadError) {
+            console.error("[Transcribe] Storage upload error:", uploadError);
+          } else {
+            const { data: urlData } = supabase.storage
+              .from("interview-files")
+              .getPublicUrl(fileName);
+
+            audioUrl = urlData.publicUrl;
+            audioPath = fileName;
+            console.log(`[Transcribe] Audio saved: ${audioPath}`);
+          }
         }
       } catch (storageErr) {
         console.error("[Transcribe] Storage error:", storageErr);

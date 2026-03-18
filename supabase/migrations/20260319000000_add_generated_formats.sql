@@ -1,0 +1,2 @@
+ALTER TABLE interviews
+  ADD COLUMN IF NOT EXISTS generated_formats JSONB DEFAULT NULL;

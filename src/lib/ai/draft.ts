@@ -7,7 +7,9 @@ export async function generateDraft(
   company: string,
   product: string,
   extractionState: ExtractionState,
-  messages: Message[]
+  messages: Message[],
+  customerContext?: string,
+  interviewSettings?: string
 ): Promise<string> {
   const transcript = messages
     .map((m) => `${m.role === "assistant" ? "Interviewer" : "Customer"}: ${m.content}`)
@@ -16,6 +18,8 @@ export async function generateDraft(
   const prompt = DRAFT_GENERATOR_PROMPT
     .replace("{{company}}", company)
     .replace("{{product}}", product)
+    .replace("{{customerContext}}", customerContext || "")
+    .replace("{{interviewSettings}}", interviewSettings || "")
     .replace("{{extraction}}", JSON.stringify(extractionState, null, 2))
     .replace("{{transcript}}", transcript);
 

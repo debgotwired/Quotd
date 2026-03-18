@@ -14,24 +14,12 @@ export async function GET(
 
   const supabase = await createServiceClient();
 
-  // Try to find by share_token first, then by id
-  let interview;
-  const { data: byToken } = await supabase
+  // Look up by share_token only — no ID fallback to prevent unauthorized access
+  const { data: interview } = await supabase
     .from("interviews")
     .select("*")
     .eq("share_token", token)
     .single();
-
-  if (byToken) {
-    interview = byToken;
-  } else {
-    const { data: byId } = await supabase
-      .from("interviews")
-      .select("*")
-      .eq("id", token)
-      .single();
-    interview = byId;
-  }
 
   if (!interview) {
     return NextResponse.json({ error: "Interview not found" }, { status: 404 });

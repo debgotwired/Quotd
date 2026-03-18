@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getTeamRole, canEditTeam } from "@/lib/teams/helpers";
 
 export async function PUT(
   request: NextRequest,
@@ -20,10 +21,10 @@ export async function PUT(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Verify ownership
+  // Verify ownership or team edit access
   const { data: interview, error: fetchError } = await supabase
     .from("interviews")
-    .select("id, user_id")
+    .select("id, user_id, team_id")
     .eq("id", id)
     .single();
 
@@ -31,7 +32,13 @@ export async function PUT(
     return NextResponse.json({ error: "Interview not found" }, { status: 404 });
   }
 
-  if (interview.user_id !== user.id) {
+  const isOwner = interview.user_id === user.id;
+  let hasTeamEditAccess = false;
+  if (!isOwner && interview.team_id) {
+    const role = await getTeamRole(supabase, interview.team_id, user.id);
+    hasTeamEditAccess = canEditTeam(role);
+  }
+  if (!isOwner && !hasTeamEditAccess) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

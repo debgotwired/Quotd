@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { createServiceClient } from "@/lib/supabase/server";
 import { isInterviewDone } from "@/lib/review/helpers";
+import { getBrandingForInterview } from "@/lib/branding/get-branding";
 import { CustomerReview } from "@/components/review/customer-review";
 import type { ReviewState } from "@/lib/supabase/types";
 
@@ -32,6 +33,8 @@ export default async function ReviewPage({
     notFound();
   }
 
+  const branding = await getBrandingForInterview(supabase, interview.user_id);
+
   return (
     <CustomerReview
       token={token}
@@ -41,6 +44,7 @@ export default async function ReviewPage({
       customerDraftContent={interview.customer_draft_content || null}
       initialReviewState={reviewState}
       status={interview.status}
+      branding={branding}
     />
   );
 }

@@ -5,7 +5,9 @@ import { CopyButton } from "./copy-button";
 import { ExportButtons } from "./export-buttons";
 import { TranscriptToggle } from "./transcript-toggle";
 import { DraftEditor } from "@/components/editor/draft-editor";
-import type { ExtractionState, Message, ReviewState } from "@/lib/supabase/types";
+import { FormatSection } from "./format-section";
+import { getUserTeamIds } from "@/lib/teams/helpers";
+import type { ExtractionState, Message, ReviewState, GeneratedFormats } from "@/lib/supabase/types";
 
 export default async function InterviewDetailPage({
   params,
@@ -14,6 +16,7 @@ export default async function InterviewDetailPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
   const { data: interview, error } = await supabase
     .from("interviews")
@@ -22,6 +25,15 @@ export default async function InterviewDetailPage({
     .single();
 
   if (error || !interview) {
+    notFound();
+  }
+
+  // Access check: must be owner or team member
+  const isOwner = interview.user_id === user?.id;
+  if (!isOwner && interview.team_id && user) {
+    const teamIds = await getUserTeamIds(supabase, user.id);
+    if (!teamIds.includes(interview.team_id)) notFound();
+  } else if (!isOwner) {
     notFound();
   }
 
@@ -141,6 +153,14 @@ export default async function InterviewDetailPage({
                 interviewId={interview.id}
               />
             </div>
+          )}
+
+          {/* Content Formats */}
+          {interview.draft_content && (
+            <FormatSection
+              interviewId={interview.id}
+              initialFormats={(interview.generated_formats as GeneratedFormats) || null}
+            />
           )}
 
           {/* Metrics as Cards */}

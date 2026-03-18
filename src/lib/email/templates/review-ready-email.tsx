@@ -15,12 +15,16 @@ interface ReviewReadyEmailProps {
   customerCompany: string;
   productName: string;
   reviewUrl: string;
+  brandColor?: string;
+  logoUrl?: string | null;
 }
 
 export function ReviewReadyEmail({
   customerCompany,
   productName,
   reviewUrl,
+  brandColor = "#1a1a1a",
+  logoUrl,
 }: ReviewReadyEmailProps) {
   return (
     <Html>
@@ -30,7 +34,12 @@ export function ReviewReadyEmail({
       </Preview>
       <Body style={main}>
         <Container style={container}>
-          <Heading style={heading}>Your Case Study is Ready</Heading>
+          {logoUrl && (
+            <Section style={{ textAlign: "center" as const, marginBottom: "24px" }}>
+              <img src={logoUrl} alt="" style={{ height: "40px", margin: "0 auto" }} />
+            </Section>
+          )}
+          <Heading style={{ ...heading, color: brandColor }}>Your Case Study is Ready</Heading>
           <Text style={paragraph}>
             Thank you for completing the interview about{" "}
             <strong>{productName}</strong>! Your case study draft is now ready
@@ -41,7 +50,7 @@ export function ReviewReadyEmail({
             feedback. You can also make edits to the text directly.
           </Text>
           <Section style={buttonContainer}>
-            <Button style={button} href={reviewUrl}>
+            <Button style={{ ...button, backgroundColor: brandColor }} href={reviewUrl}>
               Review Case Study
             </Button>
           </Section>
