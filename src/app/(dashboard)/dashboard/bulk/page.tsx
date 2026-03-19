@@ -1,9 +1,14 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { parseCsv, type CsvInterviewRow, type CsvValidationError } from "@/lib/csv/parse";
 import type { InterviewTone, InterviewFocus, TargetAudience } from "@/lib/supabase/types";
+
+type ClientOption = {
+  id: string;
+  name: string;
+};
 
 type CreatedInterview = {
   id: string;
@@ -30,8 +35,29 @@ export default function BulkCreatePage() {
   const [defaultFocus, setDefaultFocus] = useState<InterviewFocus>("balanced");
   const [defaultAudience, setDefaultAudience] = useState<TargetAudience>("general");
   const [defaultQuestionLimit, setDefaultQuestionLimit] = useState("15");
+  const [defaultClientId, setDefaultClientId] = useState("");
+  const [clients, setClients] = useState<ClientOption[]>([]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch clients for the user's team
+  useEffect(() => {
+    fetch("/api/teams")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.teams && data.teams.length > 0) {
+          return fetch(`/api/teams/${data.teams[0].id}/clients`);
+        }
+        return null;
+      })
+      .then((res) => res?.json())
+      .then((data) => {
+        if (data?.clients) {
+          setClients(data.clients.map((c: { id: string; name: string }) => ({ id: c.id, name: c.name })));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -82,6 +108,7 @@ export default function BulkCreatePage() {
       interview_focus: row.interview_focus || defaultFocus,
       target_audience: row.target_audience || defaultAudience,
       question_limit: row.question_limit || parseInt(defaultQuestionLimit, 10),
+      ...(defaultClientId ? { client_id: defaultClientId } : {}),
     }));
 
     try {
@@ -314,6 +341,23 @@ export default function BulkCreatePage() {
                 </select>
               </div>
             </div>
+
+            {clients.length > 0 && (
+              <div className="mt-4">
+                <label htmlFor="defaultClientId" className="block text-xs text-gray-600 mb-1">Client</label>
+                <select
+                  id="defaultClientId"
+                  value={defaultClientId}
+                  onChange={(e) => setDefaultClientId(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-gray-900 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-gray-200"
+                >
+                  <option value="">No client</option>
+                  {clients.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
 
           {/* Parse warnings */}

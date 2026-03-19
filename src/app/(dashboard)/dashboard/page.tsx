@@ -1,31 +1,59 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getUserTeamIds } from "@/lib/teams/helpers";
+import { getTeamClients } from "@/lib/clients/helpers";
+import { ClientFilter } from "@/components/interview/client-filter";
 import type { ExtractionState } from "@/lib/supabase/types";
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ client?: string }>;
+}) {
+  const { client: clientIdParam } = await searchParams;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  // Get personal interviews
-  const { data: personalInterviews } = await supabase
+  // Build personal interviews query
+  let personalQuery = supabase
     .from("interviews")
     .select("*")
     .eq("user_id", user!.id)
     .order("created_at", { ascending: false });
+
+  if (clientIdParam) {
+    personalQuery = personalQuery.eq("client_id", clientIdParam);
+  }
+
+  const { data: personalInterviews } = await personalQuery;
 
   // Get team interviews
   const teamIds = await getUserTeamIds(supabase, user!.id);
   let teamInterviews: typeof personalInterviews = [];
 
   if (teamIds.length > 0) {
-    const { data } = await supabase
+    let teamQuery = supabase
       .from("interviews")
       .select("*")
       .in("team_id", teamIds)
       .neq("user_id", user!.id)
       .order("created_at", { ascending: false });
+
+    if (clientIdParam) {
+      teamQuery = teamQuery.eq("client_id", clientIdParam);
+    }
+
+    const { data } = await teamQuery;
     teamInterviews = data || [];
+  }
+
+  // Fetch clients for filter dropdown
+  let clients: { id: string; name: string }[] = [];
+  if (teamIds.length > 0) {
+    const allClients = await Promise.all(
+      teamIds.map((tid) => getTeamClients(supabase, tid))
+    );
+    clients = allClients.flat().map((c) => ({ id: c.id, name: c.name }));
   }
 
   const interviews = [
@@ -66,7 +94,10 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-semibold text-gray-900">Interviews</h1>
+        <div className="flex items-center gap-4">
+          <h1 className="text-2xl font-semibold text-gray-900">Interviews</h1>
+          <ClientFilter clients={clients} selectedClientId={clientIdParam || null} />
+        </div>
         <div className="flex items-center gap-2">
           <Link
             href="/dashboard/bulk"

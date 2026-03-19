@@ -11,6 +11,11 @@ function generateShareToken(): string {
   return Array.from(array, (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
+type ClientOption = {
+  id: string;
+  name: string;
+};
+
 export default function NewInterviewPage() {
   const [customerCompany, setCustomerCompany] = useState("");
   const [productName, setProductName] = useState("");
@@ -22,7 +27,9 @@ export default function NewInterviewPage() {
   const [targetAudience, setTargetAudience] = useState("general");
   const [questionLimit, setQuestionLimit] = useState("15");
   const [teamId, setTeamId] = useState("");
+  const [clientId, setClientId] = useState("");
   const [teams, setTeams] = useState<{ id: string; name: string }[]>([]);
+  const [clients, setClients] = useState<ClientOption[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -38,6 +45,30 @@ export default function NewInterviewPage() {
       })
       .catch(() => {});
   }, []);
+
+  // Fetch clients when team changes
+  useEffect(() => {
+    if (!teamId) {
+      setClients([]);
+      setClientId("");
+      return;
+    }
+
+    fetch(`/api/teams/${teamId}/clients`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.clients) {
+          setClients(data.clients.map((c: { id: string; name: string }) => ({ id: c.id, name: c.name })));
+        } else {
+          setClients([]);
+        }
+      })
+      .catch(() => {
+        setClients([]);
+      });
+
+    setClientId("");
+  }, [teamId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,6 +97,7 @@ export default function NewInterviewPage() {
         target_audience: targetAudience,
         question_limit: parseInt(questionLimit, 10),
         ...(teamId ? { team_id: teamId } : {}),
+        ...(clientId ? { client_id: clientId } : {}),
         status: "draft",
         share_token: generateShareToken(),
         extraction_state: {
@@ -277,6 +309,28 @@ export default function NewInterviewPage() {
             </select>
             <p className="text-xs text-gray-400 mt-1.5">
               Share this interview with your team members.
+            </p>
+          </div>
+        )}
+
+        {clients.length > 0 && (
+          <div>
+            <label htmlFor="clientId" className="block text-sm font-medium text-gray-700 mb-2">
+              Client <span className="text-gray-400 font-normal">(optional)</span>
+            </label>
+            <select
+              id="clientId"
+              value={clientId}
+              onChange={(e) => setClientId(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-200 rounded-lg text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-300 transition-colors"
+            >
+              <option value="">No client</option>
+              {clients.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+            <p className="text-xs text-gray-400 mt-1.5">
+              Use client-specific branding for this interview.
             </p>
           </div>
         )}

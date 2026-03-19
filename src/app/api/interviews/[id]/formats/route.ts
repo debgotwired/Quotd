@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { generateFormat } from "@/lib/ai/formats";
+import { dispatchWebhookEvent } from "@/lib/webhooks/dispatch";
 import type {
   FormatKey,
   GeneratedFormats,
@@ -120,6 +121,12 @@ export async function POST(
     console.error("Failed to save formats:", updateError);
     return NextResponse.json({ error: "Failed to save generated formats" }, { status: 500 });
   }
+
+  // Dispatch webhook (fire and forget)
+  dispatchWebhookEvent(user.id, "format.generated", {
+    interview_id: id,
+    formats: formatsToGenerate.filter((k) => newFormats[k]),
+  }).catch(console.error);
 
   // Build response with only the newly generated formats
   const responseFormats: GeneratedFormats = {};

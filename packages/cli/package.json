@@ -1,0 +1,17 @@
+{
+  "name": "@quotd/cli",
+  "version": "0.1.0",
+  "bin": { "quotd": "./dist/index.js" },
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "commander": "^12.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "@types/node": "^22.0.0"
+  }
+}

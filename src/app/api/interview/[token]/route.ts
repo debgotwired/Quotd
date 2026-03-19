@@ -25,7 +25,7 @@ export async function GET(
       .select("*")
       .eq("interview_id", interview.id)
       .order("created_at", { ascending: true }),
-    getBrandingForInterview(supabase, interview.user_id),
+    getBrandingForInterview(supabase, interview.user_id, interview.client_id),
   ]);
 
   return NextResponse.json({

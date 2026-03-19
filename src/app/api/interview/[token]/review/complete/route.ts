@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
+import { cancelReminders } from "@/lib/reminders/init";
+import { dispatchWebhookEvent } from "@/lib/webhooks/dispatch";
 import type { ReviewState } from "@/lib/supabase/types";
 
 export async function POST(
@@ -33,12 +35,25 @@ export async function POST(
         ...currentReviewState,
         completed_at: new Date().toISOString(),
       },
+      review_completed_at: new Date().toISOString(),
     })
     .eq("id", interview.id);
 
   if (updateError) {
     return NextResponse.json({ error: "Failed to submit review" }, { status: 500 });
   }
+
+  // Dispatch review.completed webhook (fire and forget)
+  dispatchWebhookEvent(interview.user_id, "review.completed", {
+    interview_id: interview.id,
+    customer_company: interview.customer_company,
+    product_name: interview.product_name,
+  }).catch(console.error);
+
+  // Cancel any pending follow-up reminders
+  cancelReminders(interview.id).catch((err) => {
+    console.error("Failed to cancel reminders:", err);
+  });
 
   return NextResponse.json({ success: true });
 }

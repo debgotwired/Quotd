@@ -4,6 +4,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { isInterviewDone } from "@/lib/review/helpers";
 import { getBrandingForInterview } from "@/lib/branding/get-branding";
+import { TrackOpened } from "@/components/interview/track-opened";
 
 export default async function InterviewWelcomePage({
   params,
@@ -23,7 +24,7 @@ export default async function InterviewWelcomePage({
     notFound();
   }
 
-  const branding = await getBrandingForInterview(supabase, interview.user_id);
+  const branding = await getBrandingForInterview(supabase, interview.user_id, interview.client_id);
 
   // Fetch messages to check if user is resuming
   const { data: messages } = await supabase
@@ -78,6 +79,7 @@ export default async function InterviewWelcomePage({
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-white px-4">
+      <TrackOpened token={token} />
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           {branding.logo_url ? (

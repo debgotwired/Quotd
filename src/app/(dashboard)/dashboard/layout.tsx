@@ -35,6 +35,12 @@ export default async function DashboardLayout({
             Quotd
           </Link>
           <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+            <Link href="/dashboard/analytics" className="text-sm text-gray-400 hover:text-gray-600 transition-colors">
+              Analytics
+            </Link>
+            <Link href="/dashboard/clients" className="text-sm text-gray-400 hover:text-gray-600 transition-colors">
+              Clients
+            </Link>
             <Link href="/dashboard/team" className="text-sm text-gray-400 hover:text-gray-600 transition-colors">
               Team
             </Link>

@@ -33,7 +33,7 @@ export default async function ReviewPage({
     notFound();
   }
 
-  const branding = await getBrandingForInterview(supabase, interview.user_id);
+  const branding = await getBrandingForInterview(supabase, interview.user_id, interview.client_id);
 
   return (
     <CustomerReview

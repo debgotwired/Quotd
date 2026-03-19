@@ -1,0 +1,412 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Quotd API",
+    "description": "Quotd REST API for managing AI voice interviews and case study generation.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Quotd",
+      "url": "https://quotd.io"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://app.quotd.io/api/v1",
+      "description": "Production"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "API key (qtd_...) as Bearer token"
+      }
+    },
+    "schemas": {
+      "Interview": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "user_id": { "type": "string", "format": "uuid" },
+          "customer_company": { "type": "string" },
+          "product_name": { "type": "string" },
+          "status": { "type": "string", "enum": ["draft", "in_progress", "review_pending", "review_in_progress", "review_complete"] },
+          "share_token": { "type": "string" },
+          "customer_email": { "type": "string", "nullable": true },
+          "interview_tone": { "type": "string", "enum": ["formal", "conversational", "technical"] },
+          "interview_focus": { "type": "string", "enum": ["balanced", "roi", "technical", "storytelling"] },
+          "target_audience": { "type": "string", "enum": ["general", "c_suite", "technical_buyer", "end_user", "board"] },
+          "question_limit": { "type": "integer" },
+          "extraction_state": { "$ref": "#/components/schemas/ExtractionState" },
+          "draft_content": { "type": "string", "nullable": true },
+          "created_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ExtractionState": {
+        "type": "object",
+        "properties": {
+          "metrics": { "type": "array", "items": { "$ref": "#/components/schemas/Metric" } },
+          "quotes": { "type": "array", "items": { "$ref": "#/components/schemas/Quote" } },
+          "facts": { "type": "object", "properties": { "challenge": { "type": "string" }, "solution": { "type": "string" }, "impact": { "type": "string" } } },
+          "question_count": { "type": "integer" }
+        }
+      },
+      "Metric": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "baseline": { "type": "string", "nullable": true },
+          "after": { "type": "string", "nullable": true },
+          "delta": { "type": "string", "nullable": true },
+          "unit": { "type": "string" },
+          "timeframe": { "type": "string", "nullable": true },
+          "confidence": { "type": "string", "enum": ["high", "medium", "low"] }
+        }
+      },
+      "Quote": {
+        "type": "object",
+        "properties": {
+          "text": { "type": "string" },
+          "tag": { "type": "string" }
+        }
+      },
+      "Message": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "role": { "type": "string", "enum": ["assistant", "user"] },
+          "content": { "type": "string" },
+          "audio_url": { "type": "string", "nullable": true },
+          "created_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Profile": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "full_name": { "type": "string" },
+          "company_name": { "type": "string" },
+          "logo_url": { "type": "string", "nullable": true },
+          "primary_color": { "type": "string" },
+          "welcome_message": { "type": "string", "nullable": true }
+        }
+      },
+      "Team": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "owner_id": { "type": "string", "format": "uuid" },
+          "created_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ApiKey": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "key_prefix": { "type": "string" },
+          "last_used_at": { "type": "string", "format": "date-time", "nullable": true },
+          "created_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Webhook": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "url": { "type": "string", "format": "uri" },
+          "events": { "type": "array", "items": { "type": "string" } },
+          "secret": { "type": "string", "nullable": true },
+          "active": { "type": "boolean" },
+          "created_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "WebhookDelivery": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "event": { "type": "string" },
+          "payload": { "type": "object" },
+          "status_code": { "type": "integer", "nullable": true },
+          "response_body": { "type": "string", "nullable": true },
+          "attempt": { "type": "integer" },
+          "delivered_at": { "type": "string", "format": "date-time", "nullable": true },
+          "created_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Pagination": {
+        "type": "object",
+        "properties": {
+          "page": { "type": "integer" },
+          "per_page": { "type": "integer" },
+          "total": { "type": "integer" },
+          "total_pages": { "type": "integer" }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": { "type": "string" }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/interviews": {
+      "get": {
+        "summary": "List interviews",
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "per_page", "in": "query", "schema": { "type": "integer", "default": 20, "maximum": 100 } },
+          { "name": "status", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of interviews",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/Interview" } },
+                    "pagination": { "$ref": "#/components/schemas/Pagination" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create an interview",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["customer_company", "product_name"],
+                "properties": {
+                  "customer_company": { "type": "string" },
+                  "product_name": { "type": "string" },
+                  "customer_email": { "type": "string" },
+                  "interview_tone": { "type": "string", "enum": ["formal", "conversational", "technical"] },
+                  "interview_focus": { "type": "string", "enum": ["balanced", "roi", "technical", "storytelling"] },
+                  "target_audience": { "type": "string", "enum": ["general", "c_suite", "technical_buyer", "end_user", "board"] },
+                  "question_limit": { "type": "integer", "minimum": 5, "maximum": 30 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Interview created",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "properties": { "data": { "$ref": "#/components/schemas/Interview" } } }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/interviews/{id}": {
+      "get": {
+        "summary": "Get interview details",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "responses": { "200": { "description": "Interview details", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "$ref": "#/components/schemas/Interview" } } } } } } }
+      },
+      "patch": {
+        "summary": "Update interview",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "requestBody": { "content": { "application/json": { "schema": { "type": "object", "properties": { "customer_company": { "type": "string" }, "product_name": { "type": "string" } } } } } },
+        "responses": { "200": { "description": "Updated interview" } }
+      },
+      "delete": {
+        "summary": "Delete interview",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "responses": { "200": { "description": "Deleted", "content": { "application/json": { "schema": { "type": "object", "properties": { "success": { "type": "boolean" } } } } } } }
+      }
+    },
+    "/interviews/{id}/messages": {
+      "get": {
+        "summary": "Get interview messages/transcript",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "responses": { "200": { "description": "Messages", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "type": "array", "items": { "$ref": "#/components/schemas/Message" } } } } } } } }
+      }
+    },
+    "/interviews/{id}/draft": {
+      "get": {
+        "summary": "Get draft content",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "responses": { "200": { "description": "Draft content" } }
+      },
+      "put": {
+        "summary": "Update draft content",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["content"], "properties": { "content": { "type": "string" } } } } } },
+        "responses": { "200": { "description": "Draft saved" } }
+      }
+    },
+    "/interviews/{id}/formats": {
+      "get": {
+        "summary": "List generated formats",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "responses": { "200": { "description": "Generated formats" } }
+      },
+      "post": {
+        "summary": "Generate a format",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["format"], "properties": { "format": { "type": "string", "enum": ["one_pager", "linkedin", "twitter", "sales_slide", "quote_cards", "email_blurb", "all"] } } } } } },
+        "responses": { "200": { "description": "Generated format content" } }
+      }
+    },
+    "/interviews/{id}/analytics": {
+      "get": {
+        "summary": "Get extraction state (metrics, quotes, facts)",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "responses": { "200": { "description": "Extraction state", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "$ref": "#/components/schemas/ExtractionState" } } } } } } }
+      }
+    },
+    "/interviews/{id}/reminders": {
+      "get": {
+        "summary": "Get reminders for an interview",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "responses": { "200": { "description": "Reminders list" } }
+      }
+    },
+    "/interviews/{id}/export": {
+      "get": {
+        "summary": "Export draft in various formats",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "format", "in": "query", "schema": { "type": "string", "enum": ["md", "docx", "pdf", "html", "txt"], "default": "md" } }
+        ],
+        "responses": { "200": { "description": "Exported file (binary or text)" } }
+      }
+    },
+    "/teams": {
+      "get": {
+        "summary": "List teams",
+        "responses": { "200": { "description": "Teams list", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "type": "array", "items": { "$ref": "#/components/schemas/Team" } } } } } } } }
+      },
+      "post": {
+        "summary": "Create a team",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["name"], "properties": { "name": { "type": "string" } } } } } },
+        "responses": { "201": { "description": "Team created" } }
+      }
+    },
+    "/teams/{teamId}/members": {
+      "get": {
+        "summary": "List team members",
+        "parameters": [{ "name": "teamId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "responses": { "200": { "description": "Team members" } }
+      },
+      "post": {
+        "summary": "Invite a team member",
+        "parameters": [{ "name": "teamId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["email", "role"], "properties": { "email": { "type": "string" }, "role": { "type": "string", "enum": ["editor", "viewer"] } } } } } },
+        "responses": { "201": { "description": "Member added" } }
+      },
+      "delete": {
+        "summary": "Remove a team member",
+        "parameters": [{ "name": "teamId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["userId"], "properties": { "userId": { "type": "string" } } } } } },
+        "responses": { "200": { "description": "Member removed" } }
+      }
+    },
+    "/profile": {
+      "get": {
+        "summary": "Get user profile",
+        "responses": { "200": { "description": "Profile", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "$ref": "#/components/schemas/Profile" } } } } } } }
+      }
+    },
+    "/profile/branding": {
+      "get": {
+        "summary": "Get branding settings",
+        "responses": { "200": { "description": "Branding settings" } }
+      },
+      "patch": {
+        "summary": "Update branding settings",
+        "requestBody": { "content": { "application/json": { "schema": { "type": "object", "properties": { "primary_color": { "type": "string" }, "welcome_message": { "type": "string", "nullable": true }, "logo_url": { "type": "string", "nullable": true } } } } } },
+        "responses": { "200": { "description": "Branding updated" } }
+      }
+    },
+    "/api-keys": {
+      "get": {
+        "summary": "List API keys",
+        "responses": { "200": { "description": "API keys", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "type": "array", "items": { "$ref": "#/components/schemas/ApiKey" } } } } } } } }
+      },
+      "post": {
+        "summary": "Create API key (raw key returned once)",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["name"], "properties": { "name": { "type": "string" } } } } } },
+        "responses": { "201": { "description": "API key created with raw key" } }
+      }
+    },
+    "/api-keys/{keyId}": {
+      "delete": {
+        "summary": "Revoke API key",
+        "parameters": [{ "name": "keyId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "responses": { "200": { "description": "Key revoked" } }
+      }
+    },
+    "/webhooks": {
+      "get": {
+        "summary": "List webhooks",
+        "responses": { "200": { "description": "Webhooks", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "type": "array", "items": { "$ref": "#/components/schemas/Webhook" } }, "pagination": { "$ref": "#/components/schemas/Pagination" } } } } } } }
+      },
+      "post": {
+        "summary": "Create webhook",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["url", "events"],
+                "properties": {
+                  "url": { "type": "string", "format": "uri" },
+                  "events": { "type": "array", "items": { "type": "string", "enum": ["interview.created", "interview.completed", "review.started", "review.completed", "draft.generated", "format.generated", "reminder.sent"] } },
+                  "secret": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "201": { "description": "Webhook created" } }
+      }
+    },
+    "/webhooks/{webhookId}": {
+      "get": {
+        "summary": "Get webhook details",
+        "parameters": [{ "name": "webhookId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "responses": { "200": { "description": "Webhook details" } }
+      },
+      "patch": {
+        "summary": "Update webhook",
+        "parameters": [{ "name": "webhookId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "requestBody": { "content": { "application/json": { "schema": { "type": "object", "properties": { "url": { "type": "string" }, "events": { "type": "array", "items": { "type": "string" } }, "active": { "type": "boolean" }, "secret": { "type": "string" } } } } } },
+        "responses": { "200": { "description": "Webhook updated" } }
+      },
+      "delete": {
+        "summary": "Delete webhook",
+        "parameters": [{ "name": "webhookId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "responses": { "200": { "description": "Webhook deleted" } }
+      }
+    },
+    "/webhooks/{webhookId}/deliveries": {
+      "get": {
+        "summary": "Get webhook delivery log",
+        "parameters": [{ "name": "webhookId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "responses": { "200": { "description": "Delivery log", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "type": "array", "items": { "$ref": "#/components/schemas/WebhookDelivery" } } } } } } } }
+      }
+    }
+  }
+}

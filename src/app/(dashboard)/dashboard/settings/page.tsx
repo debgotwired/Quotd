@@ -207,6 +207,34 @@ export default function SettingsPage() {
         >
           {saving ? "Saving..." : saved ? "Saved" : "Save Changes"}
         </button>
+
+        {/* Developer settings */}
+        <div className="pt-8 border-t border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-900 mb-1">Developer</h2>
+          <p className="text-gray-500 text-sm mb-4">API access and integrations.</p>
+          <div className="space-y-2">
+            <Link
+              href="/dashboard/settings/api-keys"
+              className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors group"
+            >
+              <div>
+                <p className="text-sm font-medium text-gray-900">API Keys</p>
+                <p className="text-xs text-gray-400 mt-0.5">Manage keys for programmatic access</p>
+              </div>
+              <span className="text-gray-300 group-hover:text-gray-500 transition-colors">&rarr;</span>
+            </Link>
+            <Link
+              href="/dashboard/settings/webhooks"
+              className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors group"
+            >
+              <div>
+                <p className="text-sm font-medium text-gray-900">Webhooks</p>
+                <p className="text-xs text-gray-400 mt-0.5">Receive real-time event notifications</p>
+              </div>
+              <span className="text-gray-300 group-hover:text-gray-500 transition-colors">&rarr;</span>
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   );

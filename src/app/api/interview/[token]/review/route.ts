@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
 import type { ReviewState } from "@/lib/supabase/types";
 import { isInterviewDone } from "@/lib/review/helpers";
+import { dispatchWebhookEvent } from "@/lib/webhooks/dispatch";
 
 export async function GET(
   request: NextRequest,
@@ -72,6 +73,7 @@ export async function PUT(
 
   if (interview.status === "review_pending") {
     updates.status = "review_in_progress";
+    updates.review_started_at = new Date().toISOString();
   }
 
   const { error: updateError } = await supabase
@@ -81,6 +83,23 @@ export async function PUT(
 
   if (updateError) {
     return NextResponse.json({ error: "Failed to save review" }, { status: 500 });
+  }
+
+  // Dispatch review.started when transitioning from review_pending
+  if (interview.status === "review_pending") {
+    const { data: fullInterview } = await supabase
+      .from("interviews")
+      .select("user_id, customer_company, product_name")
+      .eq("id", interview.id)
+      .single();
+
+    if (fullInterview) {
+      dispatchWebhookEvent(fullInterview.user_id, "review.started", {
+        interview_id: interview.id,
+        customer_company: fullInterview.customer_company,
+        product_name: fullInterview.product_name,
+      }).catch(console.error);
+    }
   }
 
   return NextResponse.json({ success: true });

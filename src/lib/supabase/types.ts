@@ -86,7 +86,13 @@ export type Interview = {
   interview_focus?: InterviewFocus;
   target_audience?: TargetAudience;
   question_limit?: number;
+  opened_at?: string | null;
+  started_at?: string | null;
+  completed_at?: string | null;
+  review_started_at?: string | null;
+  review_completed_at?: string | null;
   team_id?: string | null;
+  client_id?: string | null;
   created_at: string;
 };
 
@@ -159,10 +165,78 @@ export type TeamInvite = {
   created_at: string;
 };
 
+export type ReminderTier = 1 | 2 | 3;
+export type ReminderStatus = "pending" | "sent" | "cancelled" | "snoozed";
+
+export type Reminder = {
+  id: string;
+  interview_id: string;
+  customer_email: string;
+  tier: ReminderTier;
+  status: ReminderStatus;
+  scheduled_for: string;
+  sent_at: string | null;
+  snooze_token: string | null;
+  ai_subject: string | null;
+  ai_body: string | null;
+  created_at: string;
+};
+
+export type Client = {
+  id: string;
+  team_id: string;
+  name: string;
+  logo_url: string | null;
+  primary_color: string | null;
+  welcome_message: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ClientWithStats = Client & {
+  interview_count: number;
+  status_breakdown: Record<string, number>;
+};
+
 export type TeamMemberWithProfile = TeamMember & {
   profile?: Pick<Profile, "full_name" | "company_name"> | null;
 };
 
 export type TeamWithMembers = Team & {
   members: TeamMemberWithProfile[];
+};
+
+export type ApiKey = {
+  id: string;
+  user_id: string;
+  name: string;
+  key_prefix: string;
+  scopes: string[];
+  last_used_at: string | null;
+  expires_at: string | null;
+  revoked_at: string | null;
+  created_at: string;
+};
+
+export type Webhook = {
+  id: string;
+  user_id: string;
+  url: string;
+  events: string[];
+  secret: string | null;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type WebhookDelivery = {
+  id: string;
+  webhook_id: string;
+  event: string;
+  payload: object;
+  status_code: number | null;
+  response_body: string | null;
+  attempt: number;
+  delivered_at: string | null;
+  created_at: string;
 };

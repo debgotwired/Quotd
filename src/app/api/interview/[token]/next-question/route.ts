@@ -55,7 +55,7 @@ export async function POST(
 
       await supabase
         .from("interviews")
-        .update({ status: "in_progress" })
+        .update({ status: "in_progress", started_at: new Date().toISOString() })
         .eq("id", interview.id);
     } else {
       questionResponse = await generateNextQuestion(

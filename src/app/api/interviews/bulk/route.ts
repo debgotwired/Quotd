@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { dispatchWebhookEvent } from "@/lib/webhooks/dispatch";
 import type { InterviewTone, InterviewFocus, TargetAudience } from "@/lib/supabase/types";
 
 function generateShareToken(): string {
@@ -18,6 +19,7 @@ type BulkInterviewInput = {
   interview_focus?: InterviewFocus;
   target_audience?: TargetAudience;
   question_limit?: number;
+  client_id?: string | null;
 };
 
 const VALID_TONES: InterviewTone[] = ["formal", "conversational", "technical"];
@@ -127,6 +129,7 @@ export async function POST(request: NextRequest) {
     interview_focus: row.interview_focus || "balanced",
     target_audience: row.target_audience || "general",
     question_limit: row.question_limit || 15,
+    ...(row.client_id ? { client_id: row.client_id } : {}),
     status: "draft" as const,
     share_token: generateShareToken(),
     extraction_state: {
@@ -148,6 +151,15 @@ export async function POST(request: NextRequest) {
       { error: "Failed to create interviews" },
       { status: 500 }
     );
+  }
+
+  // Dispatch webhook events for each created interview (fire and forget)
+  for (const interview of data) {
+    dispatchWebhookEvent(user.id, "interview.created", {
+      interview_id: interview.id,
+      customer_company: interview.customer_company,
+      product_name: interview.product_name,
+    }).catch(console.error);
   }
 
   return NextResponse.json({

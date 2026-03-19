@@ -8,6 +8,8 @@ import { getBrandingForInterview } from "@/lib/branding/get-branding";
 import { sendInterviewCompletedEmail, sendReviewReadyEmail } from "@/lib/email/send";
 import { splitMarkdownIntoSections } from "@/lib/review/sections";
 import { initReviewState } from "@/lib/review/helpers";
+import { initReminders } from "@/lib/reminders/init";
+import { dispatchWebhookEvent } from "@/lib/webhooks/dispatch";
 import type { ExtractionState, Message } from "@/lib/supabase/types";
 
 export async function POST(
@@ -138,11 +140,27 @@ export async function POST(
         extraction_state: newState,
         draft_content: draft,
         review_state: reviewState,
+        completed_at: new Date().toISOString(),
       })
       .eq("id", interview.id);
 
+    // Dispatch webhook events (fire and forget)
+    dispatchWebhookEvent(interview.user_id, "interview.completed", {
+      interview_id: interview.id,
+      customer_company: interview.customer_company,
+      product_name: interview.product_name,
+    }).catch(console.error);
+
+    if (draft) {
+      dispatchWebhookEvent(interview.user_id, "draft.generated", {
+        interview_id: interview.id,
+        customer_company: interview.customer_company,
+        product_name: interview.product_name,
+      }).catch(console.error);
+    }
+
     // Fetch branding for emails
-    const branding = await getBrandingForInterview(supabase, interview.user_id);
+    const branding = await getBrandingForInterview(supabase, interview.user_id, interview.client_id);
 
     // Send completion notification to interview owner
     if (interview.user_id) {
@@ -176,6 +194,11 @@ export async function POST(
         branding.logo_url
       ).catch((err) => {
         console.error("Failed to send review-ready email:", err);
+      });
+
+      // Schedule adaptive follow-up reminders
+      initReminders(interview.id, interview.customer_email).catch((err) => {
+        console.error("Failed to init reminders:", err);
       });
     }
 
