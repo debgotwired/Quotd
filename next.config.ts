@@ -31,11 +31,8 @@ export default withSentryConfig(nextConfig, {
   // Route browser requests through a tunnel to avoid ad-blockers
   tunnelRoute: "/monitoring",
 
-  // Automatically tree-shake unused Sentry code
-  disableLogger: true,
-
-  // Hide source maps from generated client bundles
-  sourcemaps: {
-    disable: false,
+  // Automatically tree-shake Sentry debug logging
+  bundleSizeOptimizations: {
+    excludeDebugStatements: true,
   },
 });
