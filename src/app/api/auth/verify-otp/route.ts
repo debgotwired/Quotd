@@ -13,13 +13,13 @@ const verifyRateLimit = new Map<string, { count: number; resetTime: number }>();
 const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
 const MAX_VERIFY_REQUESTS = 10; // Max 10 verify attempts per minute
 
-const USER_PASSWORD_PREFIX = "quotd_secure_";
+const USER_PASSWORD_PREFIX = "qtd_";
 
 function generateUserPassword(email: string): string {
   const crypto = require("crypto");
   const secret = process.env.OTP_PASSWORD_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || "fallback";
   const hmac = crypto.createHmac("sha256", secret).update(email.toLowerCase()).digest("hex");
-  return USER_PASSWORD_PREFIX + hmac;
+  return USER_PASSWORD_PREFIX + hmac; // 4 + 64 = 68 chars (under bcrypt 72 limit)
 }
 
 function checkRateLimit(ip: string): { allowed: boolean; retryAfter?: number } {
@@ -134,12 +134,6 @@ export async function POST(request: NextRequest) {
     // Clear failed attempts on successful verification
     clearFailedAttempts(normalizedEmail);
 
-    // Mark OTP as verified
-    await serviceClient
-      .from("otp_tokens")
-      .update({ verified: true })
-      .eq("id", otpToken.id);
-
     let userId: string;
     let isNewUser = false;
     const userPassword = generateUserPassword(normalizedEmail);
@@ -171,7 +165,7 @@ export async function POST(request: NextRequest) {
       if (!existingUser) {
         console.error("User creation failed and user not found:", createError);
         return NextResponse.json(
-          { error: "Failed to create account" },
+          { error: "Failed to create account. Please try again." },
           { status: 500 }
         );
       }
@@ -182,6 +176,12 @@ export async function POST(request: NextRequest) {
         password: userPassword,
       });
     }
+
+    // Mark OTP as verified AFTER user creation succeeds
+    await serviceClient
+      .from("otp_tokens")
+      .update({ verified: true })
+      .eq("id", otpToken.id);
 
     // Now sign in the user using the regular client with cookies
     const cookieStore = await cookies();
