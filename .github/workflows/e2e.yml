@@ -1,9 +1,9 @@
 name: E2E Production Tests
 
 on:
-  # Every 6 hours — synthetic monitoring
+  # Every 48 hours (midnight UTC, every other day)
   schedule:
-    - cron: "0 */6 * * *"
+    - cron: "0 0 */2 * *"
   # On every push to main
   push:
     branches: [main]
@@ -50,7 +50,6 @@ jobs:
         with:
           script: |
             const title = `E2E tests failed — ${new Date().toISOString().slice(0, 10)}`;
-            // Check if there's already an open issue
             const { data: issues } = await github.rest.issues.listForRepo({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -59,7 +58,6 @@ jobs:
               per_page: 1,
             });
             if (issues.length > 0) {
-              // Comment on existing issue
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
