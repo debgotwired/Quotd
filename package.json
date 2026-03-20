@@ -26,6 +26,7 @@
     "@react-email/components": "^1.0.8",
     "@react-email/render": "^2.0.4",
     "@react-pdf/renderer": "^4.3.2",
+    "@sentry/nextjs": "^10.45.0",
     "@supabase/ssr": "^0.9.0",
     "@supabase/supabase-js": "^2.98.0",
     "@tiptap/extension-code-block-lowlight": "^3.20.4",

@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
   async headers() {
@@ -19,4 +20,22 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  // Upload source maps for readable stack traces
+  silent: !process.env.CI,
+
+  // Org and project from Sentry
+  org: "siabto-creatives",
+  project: "quotd",
+
+  // Route browser requests through a tunnel to avoid ad-blockers
+  tunnelRoute: "/monitoring",
+
+  // Automatically tree-shake unused Sentry code
+  disableLogger: true,
+
+  // Hide source maps from generated client bundles
+  sourcemaps: {
+    disable: false,
+  },
+});
